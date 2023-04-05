@@ -127,6 +127,7 @@ $wo["WeChatLoginUrl"]     = $config["site_url"] . "/login-with.php?provider=WeCh
 $wo["DiscordLoginUrl"]    = $config["site_url"] . "/login-with.php?provider=Discord";
 $wo["MailruLoginUrl"]     = $config["site_url"] . "/login-with.php?provider=Mailru";
 $wo["OkLoginUrl"]         = $config["site_url"] . "/login-with.php?provider=OkRu";
+$wo["TikTokLoginUrl"]         = $config["site_url"] . "/login-with.php?provider=TikTok";
 // Defualt User Pictures
 $wo["userDefaultAvatar"]  = "upload/photos/d-avatar.jpg";
 $wo["userDefaultFAvatar"] = "upload/photos/f-avatar.jpg";
@@ -428,7 +429,12 @@ $wo['manage_pro_features'] = array('funding_request' => 'can_use_funding',
                                    'live_request' => 'can_use_live',
                                    'profile_background_request' => 'can_use_background',
                                    'affiliate_request' => 'can_use_affiliate',
-                                   'chat_request' => 'can_use_chat');
+                                   'chat_request' => 'can_use_chat',
+                                   'ai_image_use' => 'can_use_ai_image',
+                                   'ai_post_use' => 'can_use_ai_post',
+                                   'ai_user_use' => 'can_use_ai_user',
+                                   'ai_blog_use' => 'can_use_ai_blog',
+                               );
 $wo['available_pro_features'] = array();
 $wo['available_verified_features'] = array();
 
@@ -485,6 +491,31 @@ if (!$wo['config']['can_use_background']) {
 if (!$wo['config']['can_use_chat']) {
     $wo['config']['chatSystem'] = 0;
 }
+if ($wo['config']['ai_image_system'] == 0 && in_array('ai_image_use',array_keys($wo['available_pro_features']))) {
+    unset($wo['available_pro_features']['ai_image_use']);
+}
+if ($wo['config']['ai_post_system'] == 0 && in_array('ai_post_use',array_keys($wo['available_pro_features']))) {
+    unset($wo['available_pro_features']['ai_post_use']);
+}
+if ($wo['config']['ai_user_system'] == 0 && in_array('ai_user_use',array_keys($wo['available_pro_features']))) {
+    unset($wo['available_pro_features']['ai_user_use']);
+}
+if ($wo['config']['ai_blog_system'] == 0 && in_array('ai_blog_use',array_keys($wo['available_pro_features']))) {
+    unset($wo['available_pro_features']['ai_blog_use']);
+}
+if (!$wo['config']['can_use_ai_image']) {
+    $wo['config']['ai_image_system'] = 0;
+}
+if (!$wo['config']['can_use_ai_post']) {
+    $wo['config']['ai_post_system'] = 0;
+}
+if (!$wo['config']['can_use_ai_user']) {
+    $wo['config']['ai_user_system'] = 0;
+}
+if (!$wo['config']['can_use_ai_blog']) {
+    $wo['config']['ai_blog_system'] = 0;
+}
+
 $wo['config']['report_reasons'] = json_decode($wo['config']['report_reasons'],true);
 
 
@@ -495,3 +526,9 @@ if ($wo['config']['filesVersion'] != $wo['config']['version']) {
     ini_set('display_startup_errors', 0);
     error_reporting(0);
 }
+$wo['reserved_usernames'] = array();
+if (!empty($wo['config']['reserved_usernames'])) {
+    $wo['reserved_usernames'] = explode(',', $wo['config']['reserved_usernames']);
+}
+
+

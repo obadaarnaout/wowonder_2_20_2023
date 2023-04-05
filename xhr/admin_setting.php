@@ -376,11 +376,22 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
             if (in_array($_POST['currency'], $wo['stripe_currency'])) {
                 $saveSetting = Wo_SaveConfig('stripe_currency', $currency);
             }
+            else{
+                $saveSetting = Wo_SaveConfig('stripe_currency', 'USD');
+            }
+
             if (in_array($_POST['currency'], $wo['paypal_currency'])) {
                 $saveSetting = Wo_SaveConfig('paypal_currency', $currency);
             }
+            else{
+                $saveSetting = Wo_SaveConfig('paypal_currency', 'USD');
+            }
+            
             if (in_array($_POST['currency'], $wo['2checkout_currency'])) {
                 $saveSetting = Wo_SaveConfig('2checkout_currency', $currency);
+            }
+            else{
+                $saveSetting = Wo_SaveConfig('2checkout_currency', 'USD');
             }
             $request                                                              = fetchDataFromURL("https://api.exchangerate.host/latest?base=" . $currency . "&symbols=" . implode(",", array_values($wo['config']['currency_array'])));
             $exchange                                                             = json_decode($request, true);
@@ -417,7 +428,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
         exit();
     }
     if ($s == 'edit_curreny') {
-        if (!empty($_POST['currency']) && !empty($_POST['currency_symbol']) && in_array($_POST['currency_id'], array_keys($wo['config']['currency_array']))) {
+        if (!empty($_POST['currency']) && !empty($_POST['currency_symbol']) && in_array($_POST['currency_id'], array_keys($wo['config']['currency_array'])) &&  in_array($_POST['currency'], array_keys($wo['config']['currency_symbol_array']))) {
             $wo['config']['currency_array'][$_POST['currency_id']]                = Wo_Secure($_POST['currency']);
             $wo['config']['currency_symbol_array'][Wo_Secure($_POST['currency'])] = Wo_Secure($_POST['currency_symbol']);
             $saveSetting                                                          = Wo_SaveConfig('currency_array', json_encode($wo['config']['currency_array']));
@@ -880,7 +891,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                     } elseif ($_POST['type'] == 'deactivate') {
                         $db->where('user_id', Wo_Secure($value));
                         $update_data = array(
-                            'active' => 0,
+                            'active' => '0',
                             'email_code' => ''
                         );
                         $update      = $db->update(T_USERS, $update_data);
@@ -2249,9 +2260,9 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                 curl_close($ch);
                 $new_data = json_decode($response);
                 if (!empty($new_data->error)) {
-                    $data['message'] = $data->error->message;
+                    $data['message'] = $new_data->error->message;
                 }
-                if (!empty($new_data->responses[0]->error)) {
+                else if (!empty($new_data->responses[0]->error)) {
                     $data['message'] = $new_data->responses[0]->error->message;
                 } elseif ($new_data->responses[0]->safeSearchAnnotation->adult == 'LIKELY' || $new_data->responses[0]->safeSearchAnnotation->adult == 'VERY_LIKELY' || $new_data->responses[0]->safeSearchAnnotation->adult == 'UNKNOWN' || $new_data->responses[0]->safeSearchAnnotation->adult == 'VERY_UNLIKELY' || $new_data->responses[0]->safeSearchAnnotation->adult == 'UNLIKELY' || $new_data->responses[0]->safeSearchAnnotation->adult == 'POSSIBLE') {
                     $data['status']  = 200;
@@ -2627,12 +2638,17 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                 $query     = mysqli_query($sqlConnect, "ALTER TABLE " . T_LANGS . " ADD `$lang_name` TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL DEFAULT NULL;");
                 if ($query) {
                     $iso = '';
+                    $direction = '';
                     if (!empty($_POST["iso"])) {
                         $iso = Wo_Secure($_POST["iso"]);
                     }
+                    if (!empty($_POST["direction"])) {
+                        $direction = Wo_Secure($_POST["direction"]);
+                    }
                     
                     $db->insert(T_LANG_ISO,array('lang_name' => $lang_name,
-                                                 'iso' => $iso));
+                                                 'iso' => $iso,
+                                                 'direction' => $direction));
                     $content = file_get_contents('assets/languages/extra/english.php');
                     $fp      = fopen("assets/languages/extra/$lang_name.php", "wb");
                     fwrite($fp, $content);
@@ -2652,13 +2668,20 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
         echo json_encode($data);
         exit();
     }
-    if ($s == "update_iso" && !empty($_POST["lang_name"]) && !empty($_POST["iso"])) {
+    if ($s == "update_iso" && !empty($_POST["lang_name"])) {
         $lang_name = Wo_Secure($_POST["lang_name"]);
-        $iso = Wo_Secure($_POST["iso"]);
+        
         if (empty($db->where('lang_name',$lang_name)->getOne(T_LANG_ISO))) {
             $db->insert(T_LANG_ISO,array('lang_name' => $lang_name));
         }
-        $db->where('lang_name',$lang_name)->update(T_LANG_ISO,array('iso' => $iso));
+        $update_array = [];
+        if (!empty($_POST["iso"])) {
+            $update_array['iso'] = Wo_Secure($_POST["iso"]);
+        }
+        if (!empty($_POST["direction"])) {
+            $update_array['direction'] = Wo_Secure($_POST["direction"]);
+        }
+        $db->where('lang_name',$lang_name)->update(T_LANG_ISO,$update_array);
         $data["status"] = 200;
         header("Content-type: application/json");
         echo json_encode($data);
@@ -3181,6 +3204,23 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                     Wo_SaveConfig('withdrawal_payment_method', json_encode($wo['config']['withdrawal_payment_method']));
                 }
             }
+            if ($key == 'braintree_payment' || $key == 'braintree_mode' || $key == 'braintree_merchant_id' || $key == 'braintree_public_key' || $key == 'braintree_private_key') {
+
+                if (!empty($wo['config']['braintree_mode']) && !empty($wo['config']['braintree_merchant_id']) && !empty($wo['config']['braintree_public_key']) && !empty($wo['config']['braintree_private_key'])) {
+                    
+                    require_once 'assets/libraries/braintree/vendor/autoload.php';
+
+                    $gateway = new Braintree\Gateway([
+                        'environment' => $wo['config']['braintree_mode'],
+                        'merchantId' => $wo['config']['braintree_merchant_id'],
+                        'publicKey' => $wo['config']['braintree_public_key'],
+                        'privateKey' => $wo['config']['braintree_private_key']
+                    ]);
+
+                    $clientToken = $gateway->clientToken()->generate();
+                    Wo_SaveConfig('braintree_token', $clientToken);
+                } 
+            }
             if ($key == 'google_map') {
                 if ($wo['config']['yandex_map'] == 1) {
                     Wo_SaveConfig('yandex_map', 0);
@@ -3583,7 +3623,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
             $gender      = $genders[$random_keys];
             $re_data     = array(
                 'email' => Wo_Secure(str_replace(".", "_", $faker->userName) . '_' . rand(111, 999) . "@yahoo.com", 0),
-                'username' => Wo_Secure($faker->userName . '_' . rand(111, 999), 0),
+                'username' => Wo_Secure(str_replace(".", "_", $faker->userName) . '_' . rand(111, 999), 0),
                 'password' => Wo_Secure($password, 0),
                 'email_code' => Wo_Secure(md5($faker->userName . '_' . rand(111, 999)), 0),
                 'src' => 'Fake',
@@ -3936,7 +3976,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
             foreach ($_POST as $key => $value) {
                 if (in_array($key, $langs)) {
                     $key   = Wo_Secure($key);
-                    $value = base64_decode($value);
+                    //$value = base64_decode($value);
                     $value = mysqli_real_escape_string($sqlConnect, $value);
                     $query = mysqli_query($sqlConnect, "UPDATE " . T_LANGS . " SET `{$key}` = '{$value}' WHERE `lang_key` = '{$lang_key}'");
                     if ($query) {
@@ -3963,7 +4003,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                 'unusual_login',
                 'account_deleted'
             ))) {
-                $saveSetting = Wo_SaveHTMLEmails($key, base64_decode($value));
+                $saveSetting = Wo_SaveHTMLEmails($key, $value);
             }
         }
         if ($saveSetting === true) {
@@ -4764,14 +4804,14 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
             }
             if ($add == true) {
                 if (!empty($_FILES['wowonder'])) {
-                    $cover = getimagesize($_FILES["wowonder"]["tmp_name"]);
-                    if ($cover[0] > 48 || $cover[1] > 48) {
-                        $data['status']  = 400;
-                        $data['message'] = $error_icon . " wowonder image size should not be more than 48x48 ";
-                        header("Content-type: application/json");
-                        echo json_encode($data);
-                        exit();
-                    }
+                    // $cover = getimagesize($_FILES["wowonder"]["tmp_name"]);
+                    // if (!empty($cover) && ($cover[0] > 48 || $cover[1] > 48)) {
+                    //     $data['status']  = 400;
+                    //     $data['message'] = $error_icon . " wowonder image size should not be more than 48x48 ";
+                    //     header("Content-type: application/json");
+                    //     echo json_encode($data);
+                    //     exit();
+                    // }
                     $fileInfo = array(
                         'file' => $_FILES["wowonder"]["tmp_name"],
                         'name' => $_FILES['wowonder']['name'],
@@ -4791,14 +4831,14 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                     }
                 }
                 if (!empty($_FILES['sunshine'])) {
-                    $cover = getimagesize($_FILES["sunshine"]["tmp_name"]);
-                    if ($cover[0] > 48 || $cover[1] > 48) {
-                        $data['status']  = 400;
-                        $data['message'] = $error_icon . " sunshine image size should not be more than 48x48 ";
-                        header("Content-type: application/json");
-                        echo json_encode($data);
-                        exit();
-                    }
+                    // $cover = getimagesize($_FILES["sunshine"]["tmp_name"]);
+                    // if (!empty($cover) && ($cover[0] > 48 || $cover[1] > 48)) {
+                    //     $data['status']  = 400;
+                    //     $data['message'] = $error_icon . " sunshine image size should not be more than 48x48 ";
+                    //     header("Content-type: application/json");
+                    //     echo json_encode($data);
+                    //     exit();
+                    // }
                     $fileInfo = array(
                         'file' => $_FILES["sunshine"]["tmp_name"],
                         'name' => $_FILES['sunshine']['name'],
@@ -4929,6 +4969,7 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                 if (count($langs) > 0) {
                     foreach ($langs as $key => $wo['langs']) {
                         foreach ($wo['langs'] as $wo['key_'] => $wo['lang_vlaue']) {
+                            $wo['is_editale'] = true;
                             $lang_html .= Wo_LoadAdminPage('edit-lang/form-list');
                         }
                     }
@@ -4966,14 +5007,14 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                 }
                 $update_data = array();
                 if (!empty($_FILES['wowonder'])) {
-                    $cover = getimagesize($_FILES["wowonder"]["tmp_name"]);
-                    if ($cover[0] > 48 || $cover[1] > 48) {
-                        $data['status']  = 400;
-                        $data['message'] = $error_icon . " wowonder image size should not be more than 48x48 ";
-                        header("Content-type: application/json");
-                        echo json_encode($data);
-                        exit();
-                    }
+                    // $cover = getimagesize($_FILES["wowonder"]["tmp_name"]);
+                    // if (!empty($cover) && ($cover[0] > 48 || $cover[1] > 48)) {
+                    //     $data['status']  = 400;
+                    //     $data['message'] = $error_icon . " wowonder image size should not be more than 48x48 ";
+                    //     header("Content-type: application/json");
+                    //     echo json_encode($data);
+                    //     exit();
+                    // }
                     $fileInfo = array(
                         'file' => $_FILES["wowonder"]["tmp_name"],
                         'name' => $_FILES['wowonder']['name'],
@@ -4993,14 +5034,14 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
                     }
                 }
                 if (!empty($_FILES['sunshine'])) {
-                    $cover = getimagesize($_FILES["sunshine"]["tmp_name"]);
-                    if ($cover[0] > 48 || $cover[1] > 48) {
-                        $data['status']  = 400;
-                        $data['message'] = $error_icon . " sunshine image size should not be more than 48x48 ";
-                        header("Content-type: application/json");
-                        echo json_encode($data);
-                        exit();
-                    }
+                    // $cover = getimagesize($_FILES["sunshine"]["tmp_name"]);
+                    // if (!empty($cover) && ($cover[0] > 48 || $cover[1] > 48)) {
+                    //     $data['status']  = 400;
+                    //     $data['message'] = $error_icon . " sunshine image size should not be more than 48x48 ";
+                    //     header("Content-type: application/json");
+                    //     echo json_encode($data);
+                    //     exit();
+                    // }
                     $fileInfo = array(
                         'file' => $_FILES["sunshine"]["tmp_name"],
                         'name' => $_FILES['sunshine']['name'],

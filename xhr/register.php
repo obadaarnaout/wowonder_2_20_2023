@@ -7,8 +7,8 @@ if ($f == 'register') {
     if (!empty($_COOKIE['user_id'])) {
         $_COOKIE['user_id'] = '';
         unset($_COOKIE['user_id']);
-        setcookie('user_id', null, -1);
-        setcookie('user_id', null, -1, '/');
+        setcookie('user_id', '', -1);
+        setcookie('user_id', '', -1, '/');
     }
     if ($wo['config']['auto_username'] == 1) {
         $_POST['username'] = time() . rand(111111, 999999);
@@ -55,6 +55,9 @@ if ($f == 'register') {
         }
         if (!preg_match('/^[\w]+$/', $_POST['username'])) {
             $errors = $error_icon . $wo['lang']['username_invalid_characters'];
+        }
+        if ($wo['config']['reserved_usernames_system'] == 1 && in_array($_POST["username"], $wo['reserved_usernames'])) {
+            $errors = $error_icon . $wo['lang']['username_is_disallowed'];
         }
         if (!empty($_POST['phone_num'])) {
             if (!preg_match('/^\+?\d+$/', $_POST['phone_num'])) {
@@ -124,6 +127,12 @@ if ($f == 'register') {
             'active' => Wo_Secure($activate),
             'birthday' => '0000-00-00'
         );
+        if ($wo['config']['disable_start_up'] == '1') {
+            $re_data['start_up'] = '1';
+            $re_data['start_up_info'] = '1';
+            $re_data['startup_follow'] = '1';
+            $re_data['startup_image'] = '1';
+        }
         if ($wo['config']['website_mode'] == 'linkedin' && !empty($_POST['currently_working']) && in_array($_POST['currently_working'], array(
             'yes',
             'am_looking_to_work',
@@ -211,7 +220,6 @@ if ($f == 'register') {
                     $data['location'] = Wo_SeoLink('index.php?link1=go-pro');
                 }
             } else if ($wo['config']['sms_or_email'] == 'mail') {
-                $wo['user']        = $_POST;
                 $wo['code']        = $code;
                 $body              = Wo_LoadPage('emails/activate');
                 $send_message_data = array(

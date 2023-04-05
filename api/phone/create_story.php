@@ -153,7 +153,7 @@ if ($type == 'create_story') {
                                     if (!empty($fileget)) {
                                         $importImage = @file_put_contents($thumb, $fileget);
                                     }
-                                    $crop_image = Wo_Resize_Crop_Image(100, 100, $thumb, $last_file, 60);
+                                    $crop_image = Wo_Resize_Crop_Image(100, 100, $thumb, $last_file, $wo['config']['images_quality']);
                                     $upload_s3  = Wo_UploadToS3($last_file);
                                     $thumb      = $last_file;
                                 }

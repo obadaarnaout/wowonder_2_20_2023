@@ -1,4 +1,4 @@
-<div class="sun_sett_sidebar page">
+<div class="wow_content wow_sett_sidebar">
 	<ul class="list-unstyled">
 		<?php if ($wo['setting']['user_id'] == $wo['user']['id'] || Wo_IsCanPageUpdate($wo['setting']['page_id'],'general')) { ?>
 		<li class="<?php echo ($wo['setting_page'] == 'general-setting') ? 'active': '';?>">
@@ -36,7 +36,7 @@
 		</li>
 		<?php } ?>
 		<?php if ($wo['setting']['user_id'] == $wo['user']['id'] || Wo_IsCanPageUpdate($wo['setting']['page_id'],'admins')) { ?>
-		<li class="<?php echo ($wo['setting_page'] == 'admins') ? 'active': '';?>">
+		<li class="<?php echo ($wo['setting_page'] == 'admins' || $wo['setting_page'] == 'privileges') ? 'active': '';?>">
 			<a href="<?php echo Wo_SeoLink('index.php?link1=page-setting&page=' . $wo['setting']['page_name'] . '&link3=admins');?>" data-ajax="?link1=page-setting&page=<?php echo $wo['setting']['page_name'];?>&link3=admins">
 				<span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-check"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg></span> <?php echo $wo['lang']['admin'];?>
 			</a>

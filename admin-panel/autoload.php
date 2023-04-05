@@ -120,7 +120,8 @@ $pages = array(
     'edit-section',
     'cronjob_settings',
     'system_status',
-    "upload-to-storage"
+    "upload-to-storage",
+    "ai-settings",
 );
 $wo['mod_pages'] = array('dashboard', 'post-settings', 'manage-stickers', 'manage-gifts', 'manage-users', 'online-users', 'manage-stories', 'manage-pages', 'manage-groups', 'manage-posts', 'manage-articles', 'manage-events', 'manage-forum-threads', 'manage-forum-messages', 'manage-movies', 'manage-games', 'add-new-game', 'manage-user-ads', 'manage-reports', 'manage-third-psites', 'edit-movie','bank-receipts','job-categories','manage-jobs');
 
@@ -141,6 +142,7 @@ $wo['decode_windwos_v']  = $wo['config']['footer_text_color'];
 $wo['decode_windwos_value']  = base64_decode('I2RkZA==');
 if ($is_moderoter && !empty($wo['user']['permission'])) {
     $wo['user']['permission'] = json_decode($wo['user']['permission'],true);
+
     if (!in_array($page, array_keys($wo['user']['permission']))) {
         $wo['user']['permission'][$page] = 0;
         $permission = json_encode($wo['user']['permission']);
@@ -179,12 +181,12 @@ elseif ($is_moderoter && empty($wo['user']['permission'])) {
     $wo['user'] = Wo_UserData($wo['user']['user_id']);
 }
 
-if ($is_moderoter == true && $is_admin == false) {
-    if (!in_array($page, $wo['mod_pages'])) {
-        header("Location: " . Wo_SeoLink('index.php?link1=admin-cp'));
-        exit();
-    }
-}
+// if ($is_moderoter == true && $is_admin == false) {
+//     if (!in_array($page, $wo['mod_pages'])) {
+//         header("Location: " . Wo_SeoLink('index.php?link1=admin-cp'));
+//         exit();
+//     }
+// }
 if (in_array($page, $pages)) {
    $page_loaded = Wo_LoadAdminPage("$page/content");
 }
@@ -678,6 +680,11 @@ if (!empty($_COOKIE['mode']) && $_COOKIE['mode'] == 'night') {
                             <?php if ($is_admin || ($is_moderoter && $wo['user']['permission']['cronjob_settings'] == 1)) { ?>
                             <li>
                                 <a <?php echo ($page == 'cronjob_settings') ? 'class="active"' : ''; ?> href="<?php echo Wo_LoadAdminLinkSettings('cronjob_settings'); ?>" data-ajax="?path=cronjob_settings">CronJob Settings</a>
+                            </li>
+                            <?php } ?>
+                            <?php if ($is_admin || ($is_moderoter && $wo['user']['permission']['ai-settings'] == 1)) { ?>
+                            <li>
+                                <a <?php echo ($page == 'ai-settings') ? 'class="active"' : ''; ?> href="<?php echo Wo_LoadAdminLinkSettings('ai-settings'); ?>" data-ajax="?path=ai-settings">AI Settings</a>
                             </li>
                             <?php } ?>
 

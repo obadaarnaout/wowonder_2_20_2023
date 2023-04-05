@@ -1,4 +1,4 @@
-<script src="<?php echo $wo['config']['theme_url'];?>/javascript/tinymce/js/tinymce/tinymce.min.js"></script>
+<script src="<?php echo Wo_LoadAdminLink('vendors/tinymce/js/tinymce/tinymce.min.js'); ?>"></script>
 <?php $wo['emails'] = Wo_GetHtmlEmails(); ?>
 <div class="container-fluid">
     <div>
@@ -114,35 +114,35 @@ $(function() {
             form_add_settings.find('.waves-effect').text('Please wait..');
         },
         beforeSubmit : function(arr, $form, options){
-            for (var i = 0; i < arr.length; i++) {
-                if (arr[i].name == "activate") {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#activate').value=tinymce.editors[$('#activate').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'invite') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#invite').value=tinymce.editors[$('#invite').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'login_with') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#login_with').value=tinymce.editors[$('#login_with').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'notification') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#notification').value=tinymce.editors[$('#notification').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'payment_declined') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#payment_declined').value=tinymce.editors[$('#payment_declined').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'payment_approved') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#payment_approved').value=tinymce.editors[$('#payment_approved').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'recover') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#recover').value=tinymce.editors[$('#recover').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'unusual_login') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#unusual_login').value=tinymce.editors[$('#unusual_login').attr('id')].getContent())));
-                }
-                if (arr[i].name == 'account_deleted') {
-                    arr[i].value = btoa(unescape(encodeURIComponent($('#account_deleted').value=tinymce.editors[$('#account_deleted').attr('id')].getContent())));
-                }
-            }
+            // for (var i = 0; i < arr.length; i++) {
+            //     if (arr[i].name == "activate") {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#activate').value=tinymce.editors[$('#activate').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'invite') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#invite').value=tinymce.editors[$('#invite').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'login_with') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#login_with').value=tinymce.editors[$('#login_with').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'notification') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#notification').value=tinymce.editors[$('#notification').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'payment_declined') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#payment_declined').value=tinymce.editors[$('#payment_declined').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'payment_approved') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#payment_approved').value=tinymce.editors[$('#payment_approved').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'recover') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#recover').value=tinymce.editors[$('#recover').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'unusual_login') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#unusual_login').value=tinymce.editors[$('#unusual_login').attr('id')].getContent())));
+            //     }
+            //     if (arr[i].name == 'account_deleted') {
+            //         arr[i].value = btoa(unescape(encodeURIComponent($('#account_deleted').value=tinymce.editors[$('#account_deleted').attr('id')].getContent())));
+            //     }
+            // }
         },
         success: function(data) {
             if (data.status == 200) {
@@ -160,137 +160,110 @@ $(function() {
   tinymce.init({
       selector: '#activate',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#invite',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#login_with',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#notification',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#payment_declined',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#payment_approved',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#recover',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#unusual_login',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
   tinymce.init({
       selector: '#account_deleted',
       height: 270,
-      entity_encoding : "raw",
-      paste_data_images: true,
-      image_advtab: true,
-      toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      toolbar2: "print preview media | forecolor backcolor",
-      plugins: [
-        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-        "searchreplace wordcount visualblocks visualchars code fullscreen",
-        "insertdatetime media nonbreaking save table contextmenu directionality",
-        "template paste textcolor colorpicker textpattern"
-      ],
-  });
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
+    });
 });
 </script>

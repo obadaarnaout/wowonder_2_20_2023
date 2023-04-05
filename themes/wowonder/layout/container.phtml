@@ -172,7 +172,7 @@
       <link rel="stylesheet" href="<?php echo $wo['config']['theme_url'];?>/stylesheet/bootsrap-rtl.min.css<?php echo $wo['update_cache']; ?>?version=<?php echo $wo['config']['version']; ?>">
       <link rel="stylesheet" href="<?php echo $wo['config']['theme_url'];?>/stylesheet/style_rtl.css<?php echo $wo['update_cache']; ?>?version=<?php echo $wo['config']['version']; ?>">
       <?php } ?>
-      <?php if ($wo['page'] == 'create_blog' || $wo['page'] == 'edit-blog') { ?>
+      <?php if ($wo['page'] == 'create_blog' || $wo['page'] == 'edit-blog' || $wo['page'] == 'create-ai-blog') { ?>
       <script src="<?php echo $wo['config']['theme_url'];?>/javascript/tinymce/js/tinymce/tinymce.min.js?version=<?php echo $wo['config']['version']; ?>"></script>
       <?php } ?>
 
@@ -505,6 +505,9 @@
       <script src="<?php echo $wo['config']['theme_url'];?>/javascript/hls.js?version=<?php echo $wo['config']['version']; ?>"></script>
     <?php } ?>
     <script crossorigin="anonymous" src="<?php echo $wo['config']['theme_url'];?>/javascript/sdk.js?version=<?php echo $wo['config']['version']; ?>"></script>
+    <?php if ($wo['config']['braintree_payment'] == '1') { ?>
+    <script src="https://js.braintreegateway.com/web/dropin/1.36.0/js/dropin.js"></script>
+    <?php } ?>
 
     <script src="<?php echo $wo['config']['theme_url'];?>/javascript/socket.io.js?version=<?php echo $wo['config']['version']; ?>"></script>
       <script>
@@ -902,9 +905,12 @@
     <?php } ?>
 
     <?php if ($wo['loggedin'] == true) {?>
+      <?php if ($wo['config']['website_mode'] == 'linkedin') { echo Wo_LoadPage('modals/create_hiring'); } ?>
     <div class="lb-preloader"><svg width='50px' height='50px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid"><rect x="0" y="0" width="100" height="100" fill="none" class="bk"></rect><circle cx="50" cy="50" r="40" stroke="#676d76" fill="none" stroke-width="6" stroke-linecap="round"><animate attributeName="stroke-dashoffset" dur="1.5s" repeatCount="indefinite" from="0" to="502"></animate><animate attributeName="stroke-dasharray" dur="1.5s" repeatCount="indefinite" values="150.6 100.4;1 250;150.6 100.4"></animate></circle></svg></div>
 
     <?php echo Wo_LoadPage('modals/keyboard-shortcuts'); ?>
+
+    <?php if ($wo['config']['images_credit_system'] == 1 || $wo['config']['text_credit_system'] == 1) { echo Wo_LoadPage('modals/ai_credits');} ?>
     <?php } ?>
 
       <!-- JS FILES -->

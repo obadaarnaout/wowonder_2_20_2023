@@ -3,23 +3,25 @@ if ($f == 'update_two_factor') {
     $error = '';
 
     if ($s == 'enable') {
-        if (isset($_POST) && Wo_CheckSession($hash_id) === true) {
             
             $is_phone = false;
-            if (!empty($_POST['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone')) {
-                preg_match_all('/\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|
-                                2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|
-                                4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$/', $_POST['phone_number'], $matches);
-                if (!empty($matches[1][0]) && !empty($matches[0][0])) {
-                    $is_phone = true;
+            if ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone') {
+                if (!empty($_POST['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone')) {
+                    preg_match_all('/\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|
+                                    2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|
+                                    4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$/', $_POST['phone_number'], $matches);
+                    if (!empty($matches[1][0]) && !empty($matches[0][0])) {
+                        $is_phone = true;
+                    }
+                }
+                if ((empty($_POST['phone_number']) && $wo['config']['two_factor_type'] == 'phone')) {
+                    $error = $error_icon . $wo['lang']['please_check_details'];
+                }
+                elseif (!empty($_POST['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone') && $is_phone == false) {
+                    $error = $error_icon . $wo['lang']['phone_number_error'];
                 }
             }
-            if ((empty($_POST['phone_number']) && $wo['config']['two_factor_type'] == 'phone') || empty($_POST['two_factor']) || $_POST['two_factor'] != 'enable') {
-                $error = $error_icon . $wo['lang']['please_check_details'];
-            }
-            elseif (!empty($_POST['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone') && $is_phone == false) {
-                $error = $error_icon . $wo['lang']['phone_number_error'];
-            }
+                
 
             if (empty($error)) {
 
@@ -81,7 +83,6 @@ if ($f == 'update_two_factor') {
                                 'message' => $error,
                             );
             }
-        }
     }
 
     if ($s == 'disable') {
@@ -147,6 +148,7 @@ if ($f == 'update_two_factor') {
                 }
                 $Update_data['two_factor_verified'] = 1;
                 $Update_data['two_factor'] = 1;
+                $Update_data['two_factor_method'] = 'two_factor';
                 Wo_UpdateUserData($wo['user']['user_id'], $Update_data);
 
                 $data = array(
@@ -160,6 +162,110 @@ if ($f == 'update_two_factor') {
                         'status' => 400,
                         'message' => $error,
                     );
+        }
+    }
+
+    if ($s == 'verify_code') {
+        $data['status'] = 400;
+
+        if (empty($_POST['code'])) {
+            $data['message'] = $wo['lang']['empty_code'];
+        }
+        elseif (empty($_POST['factor_method']) || !in_array($_POST['factor_method'],array('two_factor','google','authy'))) {
+            $data['message'] = $wo['lang']['select_two_factor_method'];
+        }
+
+        if (empty($data['message'])) {
+            if ($_POST['factor_method'] == 'google') {
+                require_once 'assets/libraries/google_auth/vendor/autoload.php';
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                if ($google2fa->verifyKey($wo['user']['google_secret'], $_POST['code'])) {
+                    $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                    'two_factor_verified' => 1,
+                                                                                    'two_factor_method' => 'google']);
+                 
+                    $data['status'] = 200;
+                    $data['message'] = $success_icon . $wo['lang']['setting_updated'];
+                } else {
+                    $data['message'] = $wo['lang']['wrong_confirm_code'];
+                }
+            }
+            elseif ($_POST['factor_method'] == 'authy') {
+                if (verifyAuthy($_POST['code'],$wo['user']['authy_id'])) {
+                    $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                    'two_factor_verified' => 1,
+                                                                                    'two_factor_method' => 'authy']);
+                    $data['status'] = 200;
+                    $data['message'] = $success_icon . $wo['lang']['setting_updated'];
+                }
+                else{
+                    $data['status'] = 400;
+                    $data['message'] = $wo['lang']['wrong_confirm_code'];
+                }
+            }
+            else{
+                if ($wo['user']['email_code'] == md5($_POST['code'])) {
+                    $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                    'two_factor_verified' => 1,
+                                                                                    'two_factor_method' => 'two_factor']);
+                    $data['status'] = 200;
+                    $data['message'] = $success_icon . $wo['lang']['setting_updated'];
+                }
+                else{
+                    $data['status'] = 400;
+                    $data['message'] = $wo['lang']['wrong_confirm_code'];
+                }
+            }
+        }
+
+    }
+
+    if ($s == 'authy_register') {
+        $data['status'] = 400;
+
+        if (empty($_POST['email'])) {
+            $data['message'] = $wo['lang']['empty_email'];
+        }
+        if (empty($_POST['phone'])) {
+            $data['message'] = $wo['lang']['empty_phone'];
+        }
+        if (empty($_POST['country_code'])) {
+            $data['status'] = 400;
+            $data['message'] = $wo['lang']['empty_country_code'];
+        }
+
+        if (empty($data['message'])) {
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, 'https://api.authy.com/protected/json/users/new');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, "user[email]=".$_POST['email']."&user[cellphone]=".$_POST['phone']."&user[country_code]=".$_POST['country_code']);
+
+            $headers = array();
+            $headers[] = 'X-Authy-Api-Key: '.$wo['config']['authy_token'];
+            $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+            $result = curl_exec($ch);
+            if (curl_errno($ch)) {
+                $data['status'] = 400;
+                $data['message'] = curl_error($ch);
+            }
+            curl_close($ch);
+            $result = json_decode($result);
+            if (!empty($result) && !empty($result->user) && !empty($result->user->id)) {
+                $db->where('user_id', $wo['user']['id'])->update(T_USERS, ['authy_id' => $result->user->id]);
+                $QR = getAuthyQR($result->user->id);
+                if (!empty($QR)) {
+                    $data['qr'] = $QR;
+                }
+                $data['status'] = 200;
+                $data['message'] = $wo['lang']['authy_registered'];
+            }
+            else{
+                $data['message'] = $result->message;
+            }
         }
     }
     header("Content-type: application/json");

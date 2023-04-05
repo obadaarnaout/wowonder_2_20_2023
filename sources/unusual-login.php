@@ -23,4 +23,15 @@ if (!empty($_GET['type'])) {
         exit();
     }
 }
+$wo['two_factor_method'] = '';
+if (!empty($_COOKIE['two_factor_method']) && in_array($_COOKIE['two_factor_method'],array('two_factor','google','authy'))) {
+    $wo['two_factor_method'] = $_COOKIE['two_factor_method'];
+}
+
+if ($wo['two_factor_method'] == 'authy') {
+    $wo['lang']['we_have_sent_you_code'] = $wo['lang']['use_authy_app'];
+}
+else if ($wo['two_factor_method'] == 'google') {
+    $wo['lang']['we_have_sent_you_code'] = $wo['lang']['use_google_authenticator_app'];
+}
 $wo['content'] = Wo_LoadPage('welcome/unusual-login');

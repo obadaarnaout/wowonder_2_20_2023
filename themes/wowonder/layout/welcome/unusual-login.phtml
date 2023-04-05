@@ -21,9 +21,11 @@
 			<div class="wow_form_fields">
 				<label for="confirm_code">Confirmation code</label>
 				<input id="confirm_code" name="confirm_code" type="text" autofocus />
+				<?php if (!in_array($wo['two_factor_method'], ['authy','google'])) { ?>
 				<div class="send_again">
 					<p id="countDownDateTimer" class="hidden"></p>&nbsp;&nbsp;<a type="button" onclick="Wo_ResendTwoCode()" class="btn main btn-mat" id="resendCode"><?php echo $wo['lang']['send_again']?></a>
 				</div>
+				<?php } ?>
 			</div>
 			<div class="login_signup_combo">
 				<div class="login__">

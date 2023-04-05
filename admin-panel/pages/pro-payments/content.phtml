@@ -169,66 +169,24 @@ if (!empty($_GET['range']) && !in_array($_GET['range'], array('Today','Yesterday
         }
     }
 }
-$weekly_array = $array;
-$monthly_array = $array;
-$yearly_array = $array;
-$lifetime_array = $array;
-$weekly = $db->where('time',$this_start,'>=')->where('time',$this_end,'<=')->where('type','weekly')->get(T_PAYMENTS);
-$monthly = $db->where('time',$this_start,'>=')->where('time',$this_end,'<=')->where('type','monthly')->get(T_PAYMENTS);
-$yearly = $db->where('time',$this_start,'>=')->where('time',$this_end,'<=')->where('type','yearly')->get(T_PAYMENTS);
-$lifetime = $db->where('time',$this_start,'>=')->where('time',$this_end,'<=')->where('type','lifetime')->get(T_PAYMENTS);
-foreach ($weekly as $key => $value) {
-    $day = date($code,$value->time);
-    if ($main_range == 'Custom' && !empty($first_code) && !empty($second_code)) {
-        $day = "'".(int)date($first_code,$value->time).'-'.(int)date($second_code,$value->time)."'";
-    }
-    elseif ($main_range == 'Custom') {
-        $day = "'".(int)date($code,$value->time)."'";
-    }
-    if (in_array($day, array_keys($weekly_array))) {
-        $weekly_array[$day] += 1; 
+
+$allTypes = array();
+foreach ($wo["pro_packages"] as $key => $value) {
+    $payments = $db->where('time',$this_start,'>=')->where('time',$this_end,'<=')->where('type',$value['name'])->get(T_PAYMENTS);
+    $wo["pro_packages"][$key]['data_array'] = $array;
+    foreach ($payments as $key => $value) {
+        $day = date($code,$value->time);
+        if ($main_range == 'Custom' && !empty($first_code) && !empty($second_code)) {
+            $day = "'".(int)date($first_code,$value->time).'-'.(int)date($second_code,$value->time)."'";
+        }
+        elseif ($main_range == 'Custom') {
+            $day = "'".(int)date($code,$value->time)."'";
+        }
+        if (in_array($day, array_keys($wo["pro_packages"][$key]['data_array']))) {
+            $wo["pro_packages"][$key]['data_array'][$day] += 1; 
+        }
     }
 }
-foreach ($monthly as $key => $value) {
-    $day = date($code,$value->time);
-    if ($main_range == 'Custom' && !empty($first_code) && !empty($second_code)) {
-        $day = "'".(int)date($first_code,$value->time).'-'.(int)date($second_code,$value->time)."'";
-    }
-    elseif ($main_range == 'Custom') {
-        $day = "'".(int)date($code,$value->time)."'";
-    }
-    if (in_array($day, array_keys($monthly_array))) {
-        $monthly_array[$day] += 1; 
-    }
-}
-foreach ($yearly as $key => $value) {
-    $day = date($code,$value->time);
-    if ($main_range == 'Custom' && !empty($first_code) && !empty($second_code)) {
-        $day = "'".(int)date($first_code,$value->time).'-'.(int)date($second_code,$value->time)."'";
-    }
-    elseif ($main_range == 'Custom') {
-        $day = "'".(int)date($code,$value->time)."'";
-    }
-    if (in_array($day, array_keys($yearly_array))) {
-        $yearly_array[$day] += 1; 
-    }
-}
-foreach ($lifetime as $key => $value) {
-    $day = date($code,$value->time);
-    if ($main_range == 'Custom' && !empty($first_code) && !empty($second_code)) {
-        $day = "'".(int)date($first_code,$value->time).'-'.(int)date($second_code,$value->time)."'";
-    }
-    elseif ($main_range == 'Custom') {
-        $day = "'".(int)date($code,$value->time)."'";
-    }
-    if (in_array($day, array_keys($lifetime_array))) {
-        $lifetime_array[$day] += 1; 
-    }
-}
-$w_array = implode(', ', $weekly_array);
-$m_array = implode(', ', $monthly_array);
-$y_array = implode(', ', $yearly_array);
-$l_array = implode(', ', $lifetime_array);
 ?>
 <div class="container-fluid">
     <div>
@@ -281,76 +239,39 @@ $l_array = implode(', ', $lifetime_array);
               </div>
           </div>
       </div>
-      <div class="col-md-3">
-          <div class="card">
-              <div class="card-body">
-                  <h6 class="card-title">STAR SALES</h6>
-                  <div class="d-flex align-items-center mb-3">
-                      <div>
-                          <div class="avatar">
-                              <span class="avatar-title bg-primary-bright text-primary rounded-pill">
-                                  <i class="material-icons">stars</i>
-                              </span>
+      <?php foreach ($wo["pro_packages"] as $key => $value) { ?>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                      <h6 class="card-title"><?php echo($value['name']); ?> SALES</h6>
+                      <div class="d-flex align-items-center mb-3">
+                          <div>
+                              <div class="avatar">
+                                  <span class="avatar-title bg-primary-bright text-primary rounded-pill">
+                                      <?php if (!empty($value['image']) || !empty($value['night_image'])) { ?>
+                                            <img src="<?php echo(!empty($value['image']) ? $value['image'] : $value['night_image']) ?>" class="pro_packages_icon_inline">
+                                        <?php }elseif ($value['id'] == 1) { ?>
+                                            <span style="background-color:<?php echo !empty($value['color']) ? $value['color'] : '#4c7737' ?>"><i class="fa fa-star fa-fw"></i> </span>
+                                        <?php }elseif ($value['id'] == 2) { ?>
+                                            <span style="background-color:<?php echo !empty($value['color']) ? $value['color'] : '#ffbb42' ?>"><i class="fa fa-fire fa-fw"></i> </span>
+                                        <?php }elseif ($value['id'] == 3) { ?>
+                                            <span style="background-color:<?php echo !empty($value['color']) ? $value['color'] : '#e13c4c' ?>"><i class="fa fa-bolt fa-fw"></i> </span>
+                                        <?php }elseif ($value['id'] == 4) { ?>
+                                            <span style="background-color:<?php echo !empty($value['color']) ? $value['color'] : '#3f4bb8' ?>"><i class="fa fa-rocket fa-fw"></i> </span>
+                                        <?php } ?>
+                                        &nbsp;<?php echo $value['name'] ?>
+                                        <?php if ($value['time_count'] == 0 && $value["time"] != 'unlimited') { ?>
+                                            <div class="alert alert-warning m-0 mt-2 p-2 text-capitalize">Please update the package time</div>
+                                        <?php } ?>
+                                  </span>
+                              </div>
                           </div>
+                          <div class="font-weight-bold ml-1 font-size-30 ml-3"><?php echo Wo_CountAllPaymentData($value['name']); ?></div>
                       </div>
-                      <div class="font-weight-bold ml-1 font-size-30 ml-3"><?php echo Wo_CountAllPaymentData('weekly'); ?></div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <div class="col-md-3">
-          <div class="card">
-              <div class="card-body">
-                  <h6 class="card-title">HOT SALES</h6>
-                  <div class="d-flex align-items-center mb-3">
-                      <div>
-                          <div class="avatar">
-                              <span class="avatar-title bg-main-bright text-main rounded-pill">
-                                  <i class="material-icons">whatshot</i>
-                              </span>
-                          </div>
-                      </div>
-                      <div class="font-weight-bold ml-1 font-size-30 ml-3"><?php echo Wo_CountAllPaymentData('monthly'); ?></div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <div class="col-md-3">
-          <div class="card">
-              <div class="card-body">
-                  <h6 class="card-title">ULTIMA SALES</h6>
-                  <div class="d-flex align-items-center mb-3">
-                      <div>
-                          <div class="avatar">
-                              <span class="avatar-title bg-info-bright text-info rounded-pill">
-                                  <i class="material-icons">flash_on</i>
-                              </span>
-                          </div>
-                      </div>
-                      <div class="font-weight-bold ml-1 font-size-30 ml-3"><?php echo Wo_CountAllPaymentData('yearly'); ?></div>
-                  </div>
-              </div>
-          </div>
-      </div>
-      <div class="col-md-3">
-          <div class="card">
-              <div class="card-body">
-                  <h6 class="card-title">VIP SALES</h6>
-                  <div class="d-flex align-items-center mb-3">
-                      <div>
-                          <div class="avatar">
-                              <span class="avatar-title bg-warning-bright text-warning rounded-pill">
-                                  <i class="material-icons"><svg style="width:90%;height:90%;" viewBox="0 0 24 24">
-    <path fill="#fff" d="M2.81,14.12L5.64,11.29L8.17,10.79C11.39,6.41 17.55,4.22 19.78,4.22C19.78,6.45 17.59,12.61 13.21,15.83L12.71,18.36L9.88,21.19L9.17,17.66C7.76,17.66 7.76,17.66 7.05,16.95C6.34,16.24 6.34,16.24 6.34,14.83L2.81,14.12M5.64,16.95L7.05,18.36L4.39,21.03H2.97V19.61L5.64,16.95M4.22,15.54L5.46,15.71L3,18.16V16.74L4.22,15.54M8.29,18.54L8.46,19.78L7.26,21H5.84L8.29,18.54M13,9.5A1.5,1.5 0 0,0 11.5,11A1.5,1.5 0 0,0 13,12.5A1.5,1.5 0 0,0 14.5,11A1.5,1.5 0 0,0 13,9.5Z" />
-</svg></i>
-                              </span>
-                          </div>
-                      </div>
-                      <div class="font-weight-bold ml-1 font-size-30 ml-3"><?php echo Wo_CountAllPaymentData('lifetime'); ?></div>
-                  </div>
-              </div>
-          </div>
-      </div>
+                    </div>
+                </div>
+            </div>
+      <?php } ?>
 
 
 
@@ -363,7 +284,7 @@ $l_array = implode(', ', $lifetime_array);
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                 </div>
-                <p class="text-muted mb-4">Star , Hot , Ultima , Vip Sales</p>
+                <p class="text-muted mb-4">Pro Packages Sales</p>
                 <div class="row">
                     <div class="col-md-11"></div>
                     <div class="col-md-1">
@@ -522,23 +443,14 @@ function users() {
             dataLabels: {
                 enabled: false
             },
-            series: [{
-        name: 'Star Sales',
-        data: [<?php echo $w_array; ?>]
-
-        },{
-        name: 'Hot Sales',
-        data: [<?php echo $m_array; ?>]
-
-        },{
-        name: 'Ultima Sales',
-        data: [<?php echo $y_array; ?>]
-
-        },{
-        name: 'Vip Sales',
-        data: [<?php echo $l_array; ?>]
-
-        }],
+            series: [
+                <?php $count = 1; foreach ($wo["pro_packages"] as $key => $value) {
+                    echo "{
+                        name: '".$value['name']." Sales',
+                        data: [".implode(', ', $value['data_array'])."],
+                    }".($count != count($wo["pro_packages"]) ? ',' : '');
+                    $count++;
+                } ?>],
             plotOptions: {
                 bar: {
                     horizontal: false,
@@ -546,7 +458,9 @@ function users() {
                     endingShape: 'rounded'
                 },
             },
-            colors: ['#6abd46', '#ce3d3d', '#f2b92b', '#6abd46'],
+            colors: [<?php $count = 1; foreach ($wo["pro_packages"] as $key => $value) {
+                echo "'".$value['color']."'".($count != count($wo["pro_packages"]) ? ',' : '');
+            } ?>],
             xaxis: {
                 <?php if ($main_range == 'Today' || $main_range == 'Yesterday') { ?>
                         categories: [

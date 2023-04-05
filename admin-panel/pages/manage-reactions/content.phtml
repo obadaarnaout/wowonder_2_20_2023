@@ -278,8 +278,9 @@ edit_reaction_form.ajaxForm({
         $('#editcategoryModal').find('.btn-success').text("Please wait..");
     },
     success: function(data) {
+        $('#editcategoryModal').find('.btn-success').text('SAVE CHANGES');
         if (data.status == 200) {
-            $('#editcategoryModal').find('.btn-success').text('SAVE CHANGES');
+            
             $('.edit_reaction_form_alert').html('<div class="alert alert-success"><i class="fa fa-check"></i> Reaction successfully edited</div>');
             setTimeout(function () {
                 $('.edit_reaction_form_alert').empty();

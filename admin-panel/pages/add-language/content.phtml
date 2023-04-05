@@ -35,6 +35,16 @@
                                 <input type="iso" id="iso" name="iso" class="form-control">
                             </div>
                         </div>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <label for="direction" class="main-label">Direction</label>
+                                <br><small class="admin-info">The direction of the language 'Left To Right' or 'Right To Left'</small>
+                                <select class="form-control show-tick" id="direction" name="direction">
+                                    <option value="ltr">LTR</option>
+                                    <option value="rtl">RTL</option>
+                                </select>
+                            </div>
+                        </div>
                         
                         <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
                         <button type="submit" class="btn btn-primary m-t-15 waves-effect">Add Language</button>

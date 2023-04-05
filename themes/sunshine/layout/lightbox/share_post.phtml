@@ -10,9 +10,10 @@
 <div class="modal fade share_post_modal_" id="share_post_modal" role="dialog">
 	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
-				<h4 class="modal-title"><?php echo $wo['lang']['share_new_post'] ?></h4>
+			<div class="wow_pops_head">
+				<svg height="100px" preserveAspectRatio="none" version="1.1" viewBox="0 0 300 100" width="300px" xmlns="http://www.w3.org/2000/svg"><path d="M30.913,43.944c0,0,42.911-34.464,87.51-14.191c77.31,35.14,113.304-1.952,146.638-4.729 c48.654-4.056,69.94,16.218,69.94,16.218v54.396H30.913V43.944z" fill="currentColor" opacity="0.6"></path> <path d="M-35.667,44.628c0,0,42.91-34.463,87.51-14.191c77.31,35.141,113.304-1.952,146.639-4.729 c48.653-4.055,69.939,16.218,69.939,16.218v54.396H-35.667V44.628z" fill="currentColor" opacity="0.6"></path> <path d="M-34.667,62.998c0,0,56-45.667,120.316-27.839C167.484,57.842,197,41.332,232.286,30.428 c53.07-16.399,104.047,36.903,104.047,36.903l1.333,36.667l-372-2.954L-34.667,62.998z" fill="currentColor"></path></svg>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path></svg></button>
+				<h4><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z"></path></svg> <?php echo $wo['lang']['share_new_post'] ?></h4>
 			</div>
 			<div class="modal-body">
 				<div class="share_post_modal_alert"></div>
@@ -54,7 +55,7 @@
 					<?php endif;?>
 				</div>
 				<div>
-					<textarea class="form-control" style="padding: 10px; border-radius: 0" placeholder="<?php echo $wo['lang']['publisher_box_placeholder']?>" dir="auto" rows="5" onkeyup="Wo_Get_Mention(this)" id="share_post_text"></textarea>
+					<textarea class="form-control" style="padding: 10px; border-radius: 0" placeholder="<?php echo $wo['lang']['publisher_box_placeholder']?>" dir="auto" rows="4" onkeyup="Wo_Get_Mention(this)" id="share_post_text"></textarea>
 					<br>
 				</div>
 				<?php if (empty($wo['story']['parent_id']) && empty($wo['story']['shared_from']) && $wo['story']['postPrivacy'] == 0): ?>
@@ -88,7 +89,7 @@
 						</label> -->
 						<?php } ?>
 						<?php if (empty($wo['story']['page_id']) && empty($wo['story']['group_id']) ) { ?>
-						<?php if ($wo['config']['pages'] != 0) { ?>
+					    <?php if ($wo['config']['pages'] != 0) { ?>
 						<label>
 							<input type="radio" name="share_type_select" id="share_type_select" value="page">
 							<div class="sr_btn_lab_innr">
@@ -131,7 +132,6 @@
 			        <?php } ?>
 				</div>
 			        <div id="share_post_container">
-			          	<!-- ****************** -->
 			          	<div class="post-container share_modl_post_cont">
   <div class="post<?php echo (!empty($wo['story']['post_is_promoted'])) ? ' boosted': '';?>" id="post-<?php echo $wo['story']['id']; ?>" data-post-id="<?php echo $wo['story']['id'];?>" <?php if( isset( $wo['story']['LastTotal'] ) ) { echo 'data-post-total="'.$wo['story']['LastTotal'].'"'; }?> <?php if( isset( $wo['story']['ids'] ) ) { echo 'data-post-ids="'.$wo['story']['ids'].'"'; }?> <?php if( isset( $wo['story']['dt'] ) ) { echo 'data-post-dt="'.$wo['story']['dt'].'"'; }?>>
     <?php
@@ -150,9 +150,9 @@
             <a href="<?php echo $wo['story']['publisher']['url']; ?>" data-ajax="?link1=timeline&u=<?php echo $wo['story']['publisher']['username']?>">
             <img src="<?php echo $wo['story']['publisher']['avatar']; ?>" id="updateImage-<?php echo $wo['story']['publisher']['user_id']?>" class="avatar" alt="<?php echo $wo['story']['publisher']['name']; ?> profile picture">
             </a>
-	        <?php }else{ ?>
+        <?php }else{ ?>
         	<img src="<?php echo $wo['story']['publisher']['avatar']; ?>" id="updateImage-<?php echo $wo['story']['publisher']['user_id']?>" class="avatar" alt="<?php echo $wo['story']['publisher']['name']; ?> profile picture">
-	        <?php } ?>
+            <?php } ?>
         </div>
 		<div class="<?php echo Wo_RightToLeft('pull-right');?>">
 			<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="collapse" role="button" aria-expanded="false" data-target="#shar_body_coll">
@@ -178,6 +178,7 @@
         <?php }else{ ?>
         	<b><?php echo $wo['story']['publisher']['name']; ?></b>
             <?php } ?>
+            
 
             <?php if ($wo['story']['shared_from'] && is_array($wo['story']['shared_from'])): ?>
               <span class="user-popover" data-type="<?php echo $wo['story']['shared_from']['type']; ?>" data-id="<?php echo $wo['story']['shared_from']['id']; ?>">         
@@ -195,7 +196,7 @@
               <a href="<?php echo $wo['story']['post_url']; ?>" class="pointer"><span style="color: #666;"><?php echo strtolower($wo['lang']['post']); ?></span></a>
             </span>
             <?php endif; ?>
-         <?php if ($wo['config']['live_video'] == 1 && !empty($wo['story']['stream_name'])) { ?>
+            <?php if ($wo['config']['live_video'] == 1 && !empty($wo['story']['stream_name'])) { ?>
          <span><span style="color: #666;"><?php echo ($wo['story']['is_still_live'] ? $wo['lang']['is_live'] : $wo['lang']['was_live']); ?></span></span>
       <?php } ?>
 
@@ -238,9 +239,9 @@
             <small class="small-text"><?php echo $wo['lang']['created_new_blog'] ?></small>
             <?php } ?>
             <?php if (!empty($wo['story']['forum_id'])  && empty($wo['story']['shared_from']) && !empty($wo['story']['forum'])) {  ?>
-           <small class="small-text"><?php echo $wo['lang']['shared_forum'] ?></small>
-           <?php } ?>
-           <?php if (!empty($wo['story']['thread_id'])  && empty($wo['story']['shared_from']) && !empty($wo['story']['thread'])) {  ?>
+            <small class="small-text"><?php echo $wo['lang']['shared_forum'] ?></small>
+            <?php } ?>
+            <?php if (!empty($wo['story']['thread_id'])  && empty($wo['story']['shared_from']) && !empty($wo['story']['thread'])) {  ?>
          <small class="small-text"><?php echo $wo['lang']['shared_thread'] ?></small>
          <?php } ?>
             <?php if (empty($wo['story']['shared_from'])): ?>
@@ -338,11 +339,6 @@
             <span class="time">
                <a  style="color:#9197a3" class="ajax-time" href="<?php echo $wo['story']['url'];?>" title="<?php echo date('c',$wo['story']['time']); ?>" target="_blank"><?php echo Wo_Time_Elapsed_String($wo['story']['time']); ?></a>
             </span>
-            <?php if (strlen($wo['story']['postText']) >= 2 && ($wo['config']['google_translate'] == 1 || $wo['config']['yandex_translate'] == 1)): ?>
-                <span onclick="Wo_Translate($(this).attr('id'),$(this).attr('data-language'))" title="<?php echo $wo['lang']['translate'];?>" class="pointer time" id="<?php echo $wo['story']['id']; ?>" data-language="<?php echo DetermineUserLang(); ?>" data-trans-btn="<?php echo $wo['story']['id']; ?>">
-                  - <?php echo $wo['lang']['translate'];?>
-                </span> 
-            <?php endif ?>
 
             <?php if(!empty($wo['story']['postMap'])) { ?>
             <?php if(!empty($wo['story']['postSoundCloud']) || 
@@ -393,7 +389,6 @@
           </h6>
         </div>
       </div>
-		
 		<div class="collapse" id="shar_body_coll">
       <div class="post-description" id="post-description-<?php echo $wo['story']['id']; ?>">
 
@@ -465,40 +460,28 @@
 
 
         <?php } ?>
-
-        <?php if (!empty($wo['story']['offer_id']) && empty($wo['story']['parent_id'])) { ?>
-        	<div class="post-fetched-url wo_post_fetch_event">
-			   <a href="<?php echo $wo['story']['offer']['url'];?>">
-			      <?php if (!empty($wo['story']['offer']['image'])) {?>
-			      <div class="post-fetched-url-con">
-			         <img src="<?php echo $wo['story']['offer']['image'];?>" class="<?php echo Wo_RightToLeft('pull-left');?>"/>
-			         <div class="description">
-			            <p>
-			               <?php if (strlen($wo['story']['offer']['description']) > 175):?>
-			               <?php echo mb_substr($wo['story']['offer']['description'],0,175,"UTF-8") . "..."; ?>
-			               <?php else:?>
-			               <?php echo $wo['story']['offer']['description']; ?>
-			               <?php endif;?>
-			            </p>
-			         </div>
-			      </div>
-			      <?php } ?>
-			      <div class="fetched-url-text">
-			         <h4><?php echo $wo['story']['offer']['offer_text'].' '.$wo['story']['offer']['discounted_items']; ?></h4>
-			         <div class="url">
-			            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
-			               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-			               <line x1="16" y1="2" x2="16" y2="6"></line>
-			               <line x1="8" y1="2" x2="8" y2="6"></line>
-			               <line x1="3" y1="10" x2="21" y2="10"></line>
-			            </svg>
-			            <?php echo $wo['lang']['end_date']." ".$wo['story']['offer']['expire_date'];?>
-			         </div>
-			      </div>
-			      <div class="clear"></div>
-			   </a>
-			</div>
+        <?php if (!empty($wo['story']['offer_id'])) { ?>
+          <div class="post-fetched-url wo_post_fetch_event" id="fullsizeimg">
+             <a href="<?php echo $wo['story']['offer']['url'];?>">
+                <?php if (!empty($wo['story']['offer']['image'])) {?>
+                   <img src="<?php echo $wo['story']['offer']['image'];?>"/>
+                <?php } ?>
+                <div class="fetched-url-text">
+                   <div class="short_start_dt">
+                      <b><?php echo $wo['lang']['end_date']." ".$wo['story']['offer']['expire_date'];?></b>
+                   </div>
+                   <h4><?php if (strlen($wo['story']['offer']['description']) > 175):?>
+                      <?php echo mb_substr($wo['story']['offer']['description'],0,175,"UTF-8") . "..."; ?>
+                      <?php else:?>
+                      <?php echo $wo['story']['offer']['description']; ?>
+                      <?php endif;?></h4>
+                   <div class="url"><?php echo $wo['story']['offer']['offer_text'].' '.$wo['story']['offer']['discounted_items']; ?></div>
+                </div>
+                <div class="clear"></div>
+             </a>
+          </div>
         <?php } ?>
+
 
 
         <?php
@@ -618,7 +601,7 @@
         <?php if(!empty($wo['story']['postSoundCloud'])) { ?>
         <iframe width="100%" src="https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/<?php echo $wo['story']['postSoundCloud'];?>&auto_play=false"></iframe>
         <?php } ?>
-        <?php if(!empty($wo['story']['postMap']) && empty($wo['story']['postVine']) && empty($wo['story']['postSoundCloud']) && empty($wo['story']['postVimeo']) && empty($wo['story']['postDailymotion']) && empty($wo['story']['postYoutube']) && empty($wo['story']['postPlaytube']) && empty($wo['story']['postFile']) && ($wo['config']['google_map'] == 1 || $wo['config']['yandex_map'] == 1) ) { ?>
+        <?php if(!empty($wo['story']['postMap']) && empty($wo['story']['postVine']) && empty($wo['story']['postSoundCloud']) && empty($wo['story']['postVimeo']) && empty($wo['story']['postDailymotion']) && empty($wo['story']['postYoutube']) && empty($wo['story']['postPlaytube']) && empty($wo['story']['postFile']) && ($wo['config']['google_map'] == 1 || $wo['config']['yandex_map'] == 1)) { ?>
         <div class="post-map">
         	<?php if ($wo['config']['yandex_map'] == 1) { ?>
         		<div id="share_place_<?php echo($wo['story']['id']) ?>" <?php echo($wo['config']['yandex_map'] == 1 ? 'style="width: 100%; height: 300px; padding: 0; margin: 0;"' : '') ?>></div>
@@ -780,6 +763,20 @@
         </div>
 
         <?php } ?>
+        <?php if ($wo['config']['live_video'] == 1 && !empty($wo['story']['stream_name'])) { ?>
+			<div class="post-file" <?php echo $wo['story']['is_still_live'] ? 'style="/*height: 440px;*/"' : ''; ?> id="fullsizeimg">
+				<?php if ($wo['story']['is_still_live']) { ?>
+					<div class="embed-responsive embed-responsive-4by3">
+						<iframe src="https://viewer.millicast.com/v2?streamId=<?php echo($wo['config']['live_account_id']) ?>/<?php echo($wo['story']['stream_name']) ?>" class="embed-responsive-item"></iframe>
+						<div class="wow_liv_counter"><span id="live_word_<?php echo($wo['story']['id']) ?>"><?php echo $wo['lang']['live']; ?></span> <span id="live_count_<?php echo($wo['story']['id']) ?>"> <?php echo $wo['story']['live_sub_users']; ?></span></div>
+					</div>
+				<?php } else{
+					$wo['media'] = array('filename' => 'https://viewer.millicast.com/v2?streamId='.$wo['config']['live_account_id'].'/'.$wo['story']['stream_name']);
+					echo Wo_LoadPage('players/chat-video');
+					}
+				?>
+			</div>
+        <?php } ?>
         <?php if (Wo_IsUrl($wo['story']['postSticker'])): ?>
           <div class="post-file wo_video_post">
             <?php if (strpos('.mp4', $wo['story']['postSticker'])) { ?>
@@ -806,20 +803,6 @@
               echo  Wo_DisplaySharedFile($media,'record');
             ?>
         </div>
-        <?php } ?>
-        <?php if ($wo['config']['live_video'] == 1 && !empty($wo['story']['stream_name'])) { ?>
-			<div class="post-file" <?php echo $wo['story']['is_still_live'] ? 'style="/*height: 440px;*/"' : ''; ?> id="fullsizeimg">
-				<?php if ($wo['story']['is_still_live']) { ?>
-					<div class="embed-responsive embed-responsive-4by3">
-						<iframe src="https://viewer.millicast.com/v2?streamId=<?php echo($wo['config']['live_account_id']) ?>/<?php echo($wo['story']['stream_name']) ?>" class="embed-responsive-item"></iframe>
-						<div class="wow_liv_counter"><span id="live_word_<?php echo($wo['story']['id']) ?>"><?php echo $wo['lang']['live']; ?></span> <span id="live_count_<?php echo($wo['story']['id']) ?>"> <?php echo $wo['story']['live_sub_users']; ?></span></div>
-					</div>
-				<?php } else{
-					$wo['media'] = array('filename' => 'https://viewer.millicast.com/v2?streamId='.$wo['config']['live_account_id'].'/'.$wo['story']['stream_name']);
-					echo Wo_LoadPage('players/chat-video');
-					}
-				?>
-			</div>
         <?php } ?>
         <div id="fullsizeimg" style="position: relative;">
           <?php if (!empty($wo['story']['photo_album']) && $wo['story']['blur'] == 1) { ?>
@@ -1004,6 +987,20 @@
   <div class="clear"></div>
 </div>
 
+
+			        </div>
+			        <input type="hidden" id="SearchForInputType" name="type" value="timeline">
+			        <input type="hidden" id="SearchForInputPostId" name="post_id">
+			        <input type="hidden" id="SearchForInputTypeId" name="type_id">
+				    <div class="clear"></div>
+			</div>
+			<div class="modal-footer">
+				<button id="share_post_on_btn" type="button" class="btn btn-main"><?php echo $wo['lang']['share']; ?></button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 $(function () {
 	<?php if (!empty($wo['story']['product_id'])): ?>
@@ -1026,21 +1023,4 @@ jQuery(document).click(function(event){
         jQuery('.remove_combo_on_click').removeClass('comment-toggle');
     }
 });
-
-
 </script>
-			          	<!-- ****************** -->
-			        </div>
-			        <input type="hidden" id="SearchForInputType" name="type" value="timeline">
-			        <input type="hidden" id="SearchForInputPostId" name="post_id">
-			        <input type="hidden" id="SearchForInputTypeId" name="type_id">
-			        <div class="ball-pulse "><div></div><div></div><div></div></div>
-				    <button id="share_post_on_btn" type="button" class="btn btn-main pull-right">
-				        <?php echo $wo['lang']['share']; ?>
-				    </button>
-				    <div class="clear"></div>
-
-			</div>
-		</div>
-	</div>
-</div>

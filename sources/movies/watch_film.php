@@ -1,4 +1,8 @@
 <?php 
+if ($wo['loggedin'] == false) {
+  header("Location: " . Wo_SeoLink('index.php?link1=welcome'));
+  exit();
+}
 if (!isset($_GET['film-id']) || $wo['config']['movies'] == 0 || !$wo['config']['can_use_movies']) {
   header("Location: " . Wo_SeoLink('index.php?link1=welcome'));
   exit();

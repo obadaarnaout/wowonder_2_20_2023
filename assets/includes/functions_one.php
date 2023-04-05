@@ -200,7 +200,7 @@ function Wo_LangsFromDB($lang = 'english') {
     if ($query) {
         if (mysqli_num_rows($query)) {
             while ($fetched_data = mysqli_fetch_assoc($query)) {
-                $data[$fetched_data['lang_key']] = htmlspecialchars_decode($fetched_data[$lang]);
+                $data[$fetched_data['lang_key']] = htmlspecialchars_decode((string)$fetched_data[$lang]);
             }
         }
     }
@@ -491,7 +491,7 @@ function Wo_PhoneExists($phone) {
     }
     $phone = Wo_Secure($phone);
     $query = mysqli_query($sqlConnect, "SELECT COUNT(`user_id`) FROM " . T_USERS . " WHERE `phone_number` = '{$phone}'");
-    return (Wo_Sql_Result($query, 0) > 1) ? true : false;
+    return (Wo_Sql_Result($query, 0) > 0) ? true : false;
 }
 function Wo_IsOnwerUser($user_id) {
     global $wo;
@@ -622,6 +622,7 @@ function Wo_UserData($user_id, $password = true) {
     if ($fetched_data['cover'] != $wo['userDefaultCover']) {
         @$fetched_data['cover_full'] = $explode3[0] . '_full.' . $explode2;
     }
+    $fetched_data['avatar_full'] = $fetched_data['avatar'];
     $explode2 = @end(explode('.', $fetched_data['avatar']));
     $explode3 = @explode('.', $fetched_data['avatar']);
     if ($fetched_data['avatar'] != $wo['userDefaultAvatar'] && $fetched_data['avatar'] != $wo['userDefaultFAvatar']) {
@@ -1537,7 +1538,7 @@ function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placemen
                         $explode2  = @end(explode('.', $filename));
                         $explode3  = @explode('.', $filename);
                         $last_file = $explode3[0] . '_full.' . $explode2;
-                        @Wo_CompressImage($filename, $last_file, 50);
+                        @Wo_CompressImage($filename, $last_file, $wo['config']['images_quality']);
                         $upload_s3 = Wo_UploadToS3($last_file);
                         if ($wo['config']['website_mode'] != 'askfm') {
                             $regsiter_cover_image = Wo_RegisterPost(array(
@@ -1553,7 +1554,7 @@ function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placemen
                 }
             }
             if ($update_data == true) {
-                Wo_Resize_Crop_Image(918, 332, $filename, $filename, 80);
+                Wo_Resize_Crop_Image(918, 332, $filename, $filename, $wo['config']['images_quality']);
                 $upload_s3 = Wo_UploadToS3($filename);
                 return true;
             }
@@ -1613,7 +1614,7 @@ function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placemen
                         $explode2  = @end(explode('.', $filename));
                         $explode3  = @explode('.', $filename);
                         $last_file = $explode3[0] . '_full.' . $explode2;
-                        $compress  = Wo_CompressImage($filename, $last_file, 50);
+                        $compress  = Wo_CompressImage($filename, $last_file, $wo['config']['images_quality']);
                         if ($compress) {
                             $upload_s3 = Wo_UploadToS3($last_file);
                             if ($wo['config']['website_mode'] != 'askfm') {
@@ -2047,7 +2048,7 @@ function Wo_ImportImageFromFile($media, $custom_name = '_url_image', $type = '')
             $explode2  = @end(explode('.', $filename));
             $explode3  = @explode('.', $filename);
             $last_file = $explode3[0] . '_full.' . $explode2;
-            $compress  = Wo_CompressImage($filename, $last_file, 50);
+            $compress  = Wo_CompressImage($filename, $last_file, $wo['config']['images_quality']);
             if ($compress) {
                 Wo_UploadToS3($last_file);
                 if ($type == 'avatar') {
@@ -2563,7 +2564,7 @@ WHERE f1.follower_id = {$user_id}
         }
     }
     $sql_query = mysqli_query($sqlConnect, $query);
-    if (mysqli_num_rows($sql_query)) {
+    if ($sql_query != false && mysqli_num_rows($sql_query)) {
         while ($fetched_data = mysqli_fetch_assoc($sql_query)) {
             $user_data = Wo_UserData($fetched_data['following_id'], false);
             $data[]    = $user_data;
@@ -2612,6 +2613,21 @@ function Wo_GetFollowers($user_id, $type = '', $limit = '', $after_user_id = '',
             if ($wo['loggedin']) {
                 $user_data['family_member'] = Wo_GetFamalyMember($fetched_data['user_id'], $wo['user']['id']);
             }
+            $data[] = $user_data;
+        }
+    }
+    return $data;
+}
+function getRandFollower()
+{
+    global $wo, $sqlConnect;
+    $user_id = $wo['user']['user_id'];
+    $data = array();
+    $query         = " SELECT `user_id` FROM " . T_USERS . " WHERE `user_id` IN (SELECT `follower_id` FROM " . T_FOLLOWERS . " WHERE `active` = '1' AND ((`follower_id` <> {$user_id} AND `following_id` = {$user_id}) OR (`following_id` <> {$user_id} AND `follower_id` = {$user_id}))) AND `active` = '1' AND `user_id` != {$user_id} ORDER BY RAND() LIMIT 6";
+    $sql_query = mysqli_query($sqlConnect, $query);
+    if (mysqli_num_rows($sql_query)) {
+        while ($fetched_data = mysqli_fetch_assoc($sql_query)) {
+            $user_data = Wo_UserData($fetched_data['user_id'], false);
             $data[] = $user_data;
         }
     }
@@ -4535,192 +4551,201 @@ function Wo_GetMessageButton($user_id = 0) {
         return false;
     }
 }
-function Wo_MarkupAPI($text, $link = true, $hashtag = true, $mention = true, $post_id = 0) {
+function Wo_MarkupAPI($text = '', $link = true, $hashtag = true, $mention = true, $post_id = 0) {
     global $sqlConnect;
-    if ($mention == true) {
-        $Orginaltext   = $text;
-        $mention_regex = '/@\[([0-9]+)\]/i';
-        if (preg_match_all($mention_regex, $text, $matches)) {
-            foreach ($matches[1] as $match) {
-                $match        = Wo_Secure($match);
-                $match_user   = Wo_UserData($match);
-                $match_search = '@[' . $match . ']';
-                if (isset($match_user['user_id'])) {
-                    $match_replace = '<span class="hash" onclick="InjectAPI(\'{&quot;type&quot; : &quot;mention&quot;, &quot;user_id&quot;:&quot;' . $match_user['user_id'] . '&quot;}\');">' . $match_user['name'] . '</span>';
-                    $text          = str_replace($match_search, $match_replace, $text);
-                } else {
-                    $match_replace = '';
-                    $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
-                    $text          = str_replace($match_search, $match_replace, $text);
-                    if (!empty($post_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
+    if (!empty($text)) {
+        if ($mention == true) {
+            $Orginaltext   = $text;
+            $mention_regex = '/@\[([0-9]+)\]/i';
+            if (preg_match_all($mention_regex, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match        = Wo_Secure($match);
+                    $match_user   = Wo_UserData($match);
+                    $match_search = '@[' . $match . ']';
+                    if (isset($match_user['user_id'])) {
+                        $match_replace = '<span class="hash" onclick="InjectAPI(\'{&quot;type&quot; : &quot;mention&quot;, &quot;user_id&quot;:&quot;' . $match_user['user_id'] . '&quot;}\');">' . $match_user['name'] . '</span>';
+                        $text          = str_replace($match_search, $match_replace, $text);
+                    } else {
+                        $match_replace = '';
+                        $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
+                        $text          = str_replace($match_search, $match_replace, $text);
+                        if (!empty($post_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
+                        }
                     }
                 }
             }
         }
-    }
-    if ($link == true) {
-        $link_search = '/\[a\](.*?)\[\/a\]/i';
-        if (preg_match_all($link_search, $text, $matches)) {
-            foreach ($matches[1] as $match) {
-                $match_decode     = urldecode($match);
-                $match_decode_url = $match_decode;
-                $count_url        = mb_strlen($match_decode);
-                if ($count_url > 50) {
-                    $match_decode_url = mb_substr($match_decode_url, 0, 30) . '....' . mb_substr($match_decode_url, 30, 20);
+        if ($link == true) {
+            $link_search = '/\[a\](.*?)\[\/a\]/i';
+            if (preg_match_all($link_search, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match_decode     = urldecode($match);
+                    $match_decode_url = $match_decode;
+                    $count_url        = mb_strlen($match_decode);
+                    if ($count_url > 50) {
+                        $match_decode_url = mb_substr($match_decode_url, 0, 30) . '....' . mb_substr($match_decode_url, 30, 20);
+                    }
+                    $match_url = $match_decode;
+                    if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
+                        $match_url = 'http://' . $match_url;
+                    }
+                    $text = str_replace('[a]' . $match . '[/a]', '<span onclick="InjectAPI(\'{&quot;type&quot; : &quot;url&quot;, &quot;link&quot;:&quot;' . strip_tags($match_url) . '&quot;}\');" class="hash" rel="nofollow">' . $match_decode_url . '</span>', $text);
                 }
-                $match_url = $match_decode;
-                if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
-                    $match_url = 'http://' . $match_url;
-                }
-                $text = str_replace('[a]' . $match . '[/a]', '<span onclick="InjectAPI(\'{&quot;type&quot; : &quot;url&quot;, &quot;link&quot;:&quot;' . strip_tags($match_url) . '&quot;}\');" class="hash" rel="nofollow">' . $match_decode_url . '</span>', $text);
             }
         }
-    }
-    if ($hashtag == true) {
-        $hashtag_regex = '/(#\[([0-9]+)\])/i';
-        preg_match_all($hashtag_regex, $text, $matches);
-        $match_i = 0;
-        foreach ($matches[1] as $match) {
-            $hashtag  = $matches[1][$match_i];
-            $hashkey  = $matches[2][$match_i];
-            $hashdata = Wo_GetHashtag($hashkey);
-            if (is_array($hashdata)) {
-                $hashlink = '<span class="hash" onclick="InjectAPI(\'{&quot;type&quot; : &quot;hashtag&quot;, &quot;tag&quot;:&quot;' . $hashdata['tag'] . '&quot;}\');">#' . $hashdata['tag'] . '</span>';
-                $text     = str_replace($hashtag, $hashlink, $text);
+        if ($hashtag == true) {
+            $hashtag_regex = '/(#\[([0-9]+)\])/i';
+            preg_match_all($hashtag_regex, $text, $matches);
+            $match_i = 0;
+            foreach ($matches[1] as $match) {
+                $hashtag  = $matches[1][$match_i];
+                $hashkey  = $matches[2][$match_i];
+                $hashdata = Wo_GetHashtag($hashkey);
+                if (is_array($hashdata)) {
+                    $hashlink = '<span class="hash" onclick="InjectAPI(\'{&quot;type&quot; : &quot;hashtag&quot;, &quot;tag&quot;:&quot;' . $hashdata['tag'] . '&quot;}\');">#' . $hashdata['tag'] . '</span>';
+                    $text     = str_replace($hashtag, $hashlink, $text);
+                }
+                $match_i++;
             }
-            $match_i++;
         }
     }
     return $text;
 }
 function Wo_Markup($text, $link = true, $hashtag = true, $mention = true, $post_id = 0, $comment_id = 0, $reply_id = 0) {
     global $sqlConnect;
-    if ($mention == true) {
-        $Orginaltext   = $text;
-        $mention_regex = '/@\[([0-9]+)\]/i';
-        if (preg_match_all($mention_regex, $text, $matches)) {
-            foreach ($matches[1] as $match) {
-                $match        = Wo_Secure($match);
-                $match_user   = Wo_UserData($match);
-                $match_search = '@[' . $match . ']';
-                if (isset($match_user['user_id'])) {
-                    $match_replace = '<span class="user-popover" data-id="' . $match_user['id'] . '" data-type="' . $match_user['type'] . '"><a href="' . Wo_SeoLink('index.php?link1=timeline&u=' . $match_user['username']) . '" class="hash" data-ajax="?link1=timeline&u=' . $match_user['username'] . '">' . $match_user['name'] . '</a></span>';
-                    $text          = str_replace($match_search, $match_replace, $text);
-                } else {
-                    $match_replace = '';
-                    $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
-                    $text          = str_replace($match_search, $match_replace, $text);
-                    if (!empty($post_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
-                    } elseif (!empty($comment_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$comment_id}");
-                    } elseif (!empty($reply_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS_REPLIES . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$reply_id}");
+    if (!empty($text)) {
+        if ($mention == true) {
+            $Orginaltext   = $text;
+            $mention_regex = '/@\[([0-9]+)\]/i';
+            if (preg_match_all($mention_regex, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match        = Wo_Secure($match);
+                    $match_user   = Wo_UserData($match);
+                    $match_search = '@[' . $match . ']';
+                    if (isset($match_user['user_id'])) {
+                        $match_replace = '<span class="user-popover" data-id="' . $match_user['id'] . '" data-type="' . $match_user['type'] . '"><a href="' . Wo_SeoLink('index.php?link1=timeline&u=' . $match_user['username']) . '" class="hash" data-ajax="?link1=timeline&u=' . $match_user['username'] . '">' . $match_user['name'] . '</a></span>';
+                        $text          = str_replace($match_search, $match_replace, $text);
+                    } else {
+                        $match_replace = '';
+                        $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
+                        $text          = str_replace($match_search, $match_replace, $text);
+                        if (!empty($post_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
+                        } elseif (!empty($comment_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$comment_id}");
+                        } elseif (!empty($reply_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS_REPLIES . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$reply_id}");
+                        }
                     }
                 }
             }
         }
-    }
-    if ($link == true) {
-        $link_search = '/\[a\](.*?)\[\/a\]/i';
-        if (preg_match_all($link_search, $text, $matches)) {
+        if ($link == true) {
+            $link_search = '/\[a\](.*?)\[\/a\]/i';
+            if (preg_match_all($link_search, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match_decode     = urldecode($match);
+                    $match_decode_url = $match_decode;
+                    $count_url        = mb_strlen($match_decode);
+                    if ($count_url > 50) {
+                        $match_decode_url = mb_substr($match_decode_url, 0, 30) . '....' . mb_substr($match_decode_url, 30, 20);
+                    }
+                    $match_url = $match_decode;
+                    if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
+                        $match_url = 'http://' . $match_url;
+                    }
+                    $text = str_replace('[a]' . $match . '[/a]', '<a href="' . strip_tags($match_url) . '" target="_blank" class="hash" rel="nofollow">' . $match_decode_url . '</a>', $text);
+                }
+            }
+        }
+        if ($hashtag == true) {
+            $hashtag_regex = '/(#\[([0-9]+)\])/i';
+            preg_match_all($hashtag_regex, $text, $matches);
+            $match_i = 0;
             foreach ($matches[1] as $match) {
-                $match_decode     = urldecode($match);
-                $match_decode_url = $match_decode;
-                $count_url        = mb_strlen($match_decode);
-                if ($count_url > 50) {
-                    $match_decode_url = mb_substr($match_decode_url, 0, 30) . '....' . mb_substr($match_decode_url, 30, 20);
+                $hashtag  = $matches[1][$match_i];
+                $hashkey  = $matches[2][$match_i];
+                $hashdata = Wo_GetHashtag($hashkey);
+                if (is_array($hashdata)) {
+                    $hashlink = '<a href="' . Wo_SeoLink('index.php?link1=hashtag&hash=' . $hashdata['tag']) . '" class="hash">#' . $hashdata['tag'] . '</a>';
+                    $text     = str_replace($hashtag, $hashlink, $text);
                 }
-                $match_url = $match_decode;
-                if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
-                    $match_url = 'http://' . $match_url;
-                }
-                $text = str_replace('[a]' . $match . '[/a]', '<a href="' . strip_tags($match_url) . '" target="_blank" class="hash" rel="nofollow">' . $match_decode_url . '</a>', $text);
+                $match_i++;
             }
         }
     }
-    if ($hashtag == true) {
-        $hashtag_regex = '/(#\[([0-9]+)\])/i';
-        preg_match_all($hashtag_regex, $text, $matches);
-        $match_i = 0;
-        foreach ($matches[1] as $match) {
-            $hashtag  = $matches[1][$match_i];
-            $hashkey  = $matches[2][$match_i];
-            $hashdata = Wo_GetHashtag($hashkey);
-            if (is_array($hashdata)) {
-                $hashlink = '<a href="' . Wo_SeoLink('index.php?link1=hashtag&hash=' . $hashdata['tag']) . '" class="hash">#' . $hashdata['tag'] . '</a>';
-                $text     = str_replace($hashtag, $hashlink, $text);
-            }
-            $match_i++;
-        }
-    }
+        
     return $text;
 }
 function Wo_EditMarkup($text, $link = true, $hashtag = true, $mention = true, $post_id = 0, $comment_id = 0, $reply_id = 0) {
     global $sqlConnect;
-    if ($mention == true) {
-        $Orginaltext   = $text;
-        $mention_regex = '/@\[([0-9]+)\]/i';
-        if (preg_match_all($mention_regex, $text, $matches)) {
-            foreach ($matches[1] as $match) {
-                $match        = Wo_Secure($match);
-                $match_user   = Wo_UserData($match);
-                $match_search = '@[' . $match . ']';
-                if (isset($match_user['user_id'])) {
-                    $match_replace = '@' . $match_user['username'];
-                    $text          = str_replace($match_search, $match_replace, $text);
-                } else {
-                    $match_replace = '';
-                    $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
-                    $text          = str_replace($match_search, $match_replace, $text);
-                    if (!empty($post_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
-                    } elseif (!empty($comment_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$comment_id}");
-                    } elseif (!empty($reply_id)) {
-                        mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS_REPLIES . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$reply_id}");
+    if (!empty($text)) {
+        if ($mention == true) {
+            $Orginaltext   = $text;
+            $mention_regex = '/@\[([0-9]+)\]/i';
+            if (preg_match_all($mention_regex, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match        = Wo_Secure($match);
+                    $match_user   = Wo_UserData($match);
+                    $match_search = '@[' . $match . ']';
+                    if (isset($match_user['user_id'])) {
+                        $match_replace = '@' . $match_user['username'];
+                        $text          = str_replace($match_search, $match_replace, $text);
+                    } else {
+                        $match_replace = '';
+                        $Orginaltext   = str_replace($match_search, $match_replace, $Orginaltext);
+                        $text          = str_replace($match_search, $match_replace, $text);
+                        if (!empty($post_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_POSTS . " SET `postText` = '" . $Orginaltext . "' WHERE `id` = {$post_id}");
+                        } elseif (!empty($comment_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$comment_id}");
+                        } elseif (!empty($reply_id)) {
+                            mysqli_query($sqlConnect, "UPDATE " . T_COMMENTS_REPLIES . " SET `text` = '" . $Orginaltext . "' WHERE `id` = {$reply_id}");
+                        }
                     }
                 }
             }
         }
-    }
-    if ($link == true) {
-        $link_search = '/\[a\](.*?)\[\/a\]/i';
-        if (preg_match_all($link_search, $text, $matches)) {
-            foreach ($matches[1] as $match) {
-                $match_decode = urldecode($match);
-                $match_url    = $match_decode;
-                if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
-                    $match_url = 'http://' . $match_url;
+        if ($link == true) {
+            $link_search = '/\[a\](.*?)\[\/a\]/i';
+            if (preg_match_all($link_search, $text, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $match_decode = urldecode($match);
+                    $match_url    = $match_decode;
+                    if (!preg_match("/http(|s)\:\/\//", $match_decode)) {
+                        $match_url = 'http://' . $match_url;
+                    }
+                    $text = str_replace('[a]' . $match . '[/a]', $match_decode, $text);
                 }
-                $text = str_replace('[a]' . $match . '[/a]', $match_decode, $text);
             }
         }
-    }
-    if ($hashtag == true) {
-        $hashtag_regex = '/(#\[([0-9]+)\])/i';
-        preg_match_all($hashtag_regex, $text, $matches);
-        $match_i = 0;
-        foreach ($matches[1] as $match) {
-            $hashtag  = $matches[1][$match_i];
-            $hashkey  = $matches[2][$match_i];
-            $hashdata = Wo_GetHashtag($hashkey);
-            if (is_array($hashdata)) {
-                $hashlink = '#' . $hashdata['tag'];
-                $text     = str_replace($hashtag, $hashlink, $text);
+        if ($hashtag == true) {
+            $hashtag_regex = '/(#\[([0-9]+)\])/i';
+            preg_match_all($hashtag_regex, $text, $matches);
+            $match_i = 0;
+            foreach ($matches[1] as $match) {
+                $hashtag  = $matches[1][$match_i];
+                $hashkey  = $matches[2][$match_i];
+                $hashdata = Wo_GetHashtag($hashkey);
+                if (is_array($hashdata)) {
+                    $hashlink = '#' . $hashdata['tag'];
+                    $text     = str_replace($hashtag, $hashlink, $text);
+                }
+                $match_i++;
             }
-            $match_i++;
         }
     }
     return $text;
 }
 function Wo_Emo($string = '') {
     global $emo, $wo;
-    foreach ($emo as $code => $name) {
-        $code   = $code;
-        $name   = '<i class="twa-lg twa twa-' . $name . '"></i>';
-        $string = str_replace($code, $name, $string);
+    if (!empty($string)) {
+        foreach ($emo as $code => $name) {
+            $code   = $code;
+            $name   = '<i class="twa-lg twa twa-' . $name . '"></i>';
+            $string = str_replace($code, $name, $string);
+        }
     }
     return $string;
 }
@@ -4934,12 +4959,12 @@ function Wo_ShareFile($data = array(), $type = 0, $crop = true) {
             if ($crop == true) {
                 if ($type == 1) {
                     if ($second_file != 'gif') {
-                        @Wo_CompressImage($filename, $filename, 50);
+                        @Wo_CompressImage($filename, $filename, $wo['config']['images_quality']);
                     }
                     $explode2  = @end(explode('.', $filename));
                     $explode3  = @explode('.', $filename);
                     $last_file = $explode3[0] . '_small.' . $explode2;
-                    if (Wo_Resize_Crop_Image(400, 400, $filename, $last_file, 60)) {
+                    if (Wo_Resize_Crop_Image(400, 400, $filename, $last_file, $wo['config']['images_quality'])) {
                         if ($second_file != 'gif' && $wo['config']['watermark'] == 1 && !empty($wo['add_watermark']) && $wo['add_watermark'] == true) {
                             watermark_image($last_file);
                         }
@@ -4951,7 +4976,7 @@ function Wo_ShareFile($data = array(), $type = 0, $crop = true) {
                     }
                 } else {
                     if (!isset($data['compress']) && $second_file != 'gif') {
-                        @Wo_CompressImage($filename, $filename, 10);
+                        @Wo_CompressImage($filename, $filename, $wo['config']['images_quality']);
                     }
                 }
             }
@@ -4960,7 +4985,7 @@ function Wo_ShareFile($data = array(), $type = 0, $crop = true) {
             }
         }
         if (!empty($data['crop'])) {
-            $crop_image = Wo_Resize_Crop_Image($data['crop']['width'], $data['crop']['height'], $filename, $filename, 60);
+            $crop_image = Wo_Resize_Crop_Image($data['crop']['width'], $data['crop']['height'], $filename, $filename, $wo['config']['images_quality']);
         }
         if (empty($data['local_upload'])) {
             if (($wo['config']['amazone_s3'] == 1 || $wo['config']['wasabi_storage'] == 1 || $wo['config']['ftp_upload'] == 1 || $wo['config']['spaces'] == 1 || $wo['config']['cloud_upload'] == 1 || $wo['config']['backblaze_storage'] == 1) && !empty($filename)) {
@@ -5358,7 +5383,7 @@ function Wo_RegisterPost($re_data = array('recipient_id' => 0)) {
         $hashtag_regex = '/#([^`~!@$%^&*\#()\-+=\\|\/\.,<>?\'\":;{}\[\]* ]+)/i';
         preg_match_all($hashtag_regex, $re_data['postText'], $matches);
         foreach ($matches[1] as $match) {
-            $match = strtolower($match);
+            //$match = strtolower($match);
             if (!is_numeric($match)) {
                 $hashdata = Wo_GetHashtag($match);
                 if (is_array($hashdata)) {
@@ -5709,7 +5734,9 @@ function Wo_PostData($post_id, $placement = '', $limited = '', $comments_limit =
     $story['postText_API']     = Wo_MarkupAPI($story['postText'], true, true, true, $story['post_id']);
     $story['postText_API']     = Wo_Emo($story['postText_API']);
     $story['Orginaltext']      = Wo_EditMarkup($story['postText'], true, true, true, $story['post_id']);
-    $story['Orginaltext']      = str_replace('<br>', "\n", $story['Orginaltext']);
+    if (!empty($story['Orginaltext'])) {
+        $story['Orginaltext']      = str_replace('<br>', "\n", $story['Orginaltext']);
+    }
     $story['postText']         = Wo_Emo($story['postText']);
     $story['postText']         = Wo_Markup($story['postText'], true, true, true, $story['post_id']);
     $story['post_time']        = Wo_Time_Elapsed_String($story['time']);
@@ -9341,8 +9368,8 @@ function GetIso()
     foreach ($all_langs as $key => $value) {
         try {
             $info = $db->where('lang_name',$value)->getOne(T_LANG_ISO);
-            if (!empty($info) && !empty($info->iso)) {
-                $iso[$value] = $info->iso;
+            if (!empty($info)) {
+                $iso[$value] = $info;
             }
         } catch (Exception $e) {
             
@@ -9738,4 +9765,829 @@ function checkIfThereIsError($object) {
 
 function isfuncEnabled($func) {
     return is_callable($func) && false === stripos(ini_get('disable_functions'), $func);
+}
+
+function getAISize($size = '128x128')
+{
+    $data['width'] = 128;
+    $data['height'] = 128;
+    if (!empty($size) && strpos($size, 'x') !== false) {
+        $sizeArray = explode('x', $size);
+        $data['width'] = (!empty($sizeArray[0]) && is_numeric($sizeArray[0])) ? $sizeArray[0] : 128;
+        $data['height'] = (!empty($sizeArray[1]) && is_numeric($sizeArray[1])) ? $sizeArray[1] : 128;
+    }
+    return $data;
+}
+
+function getAIVersion($name='prompthero-openjourney')
+{
+    $versions = array(
+        'prompthero-openjourney' => '9936c2001faa2194a261c01381f90e65261879985476014a0a37a334593a05eb',
+        'stability-ai-stable-diffusion' => 'db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf',
+        '22-hours-vintedois-diffusion' => '28cea91bdfced0e2dc7fda466cc0a46501c0edc84905b2120ea02e0707b967fd',
+    );
+    return $versions[$name];
+}
+
+function getMidJeournyJson($text = '' , $size = '128x128',$num_outputs = 1)
+{
+    global $wo,$db;
+
+    $js = 
+        '{
+            "version":"'.getAIVersion($wo['config']['midjeourny_model']).'",
+            "input":{
+                "prompt":"'.$text.'",
+                "num_outputs":'.$num_outputs.',
+                "num_inference_steps":'.$wo['config']['num_inference_steps'].',
+                "guidance_scale":'.$wo['config']['guidance_scale'].'
+        ';
+    if (!empty($wo['config']['seed'])) {
+        $js .= ',"seed": '.$wo['config']['seed'];
+    }
+
+    if ($wo['config']['midjeourny_model'] == 'stability-ai-stable-diffusion') {
+        $js .= ',"image_dimensions": "'.$size.'"';
+        
+    }
+    else{
+        $js .= ',"width": '.$size['width'].',"height": '.$size['height'].'';
+    }
+
+    if ($wo['config']['midjeourny_model'] != 'prompthero-openjourney') {
+        $js .= ',"scheduler": "'.$wo['config']['scheduler'].'"';
+        if (!empty($wo['config']['negative_prompt'])) {
+            $js .= ',"negative_prompt": "'.$wo['config']['negative_prompt'].'"';
+        }
+    }
+
+    if ($wo['config']['midjeourny_model'] == '22-hours-vintedois-diffusion' && !empty($wo['config']['prompt_strength'])) {
+        $js .= ',"prompt_strength": '.$wo['config']['prompt_strength'];
+    }
+
+    $js .= '}}';
+
+    return $js;
+}
+
+function requestMidJeourny($url , $js = '')
+{
+    global $wo,$db;
+
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    if (!empty($js)) {
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $js);
+    }
+
+    $headers = array();
+    $headers[] = 'Authorization: Token ' . $wo['config']['replicate_token'];
+    $headers[] = 'Content-Type: application/json';
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        throw new Exception(curl_error($ch));
+    }
+    curl_close($ch);
+
+    $result = json_decode($result);
+
+    return $result;
+}
+
+function getUserImageDataUri($image)
+{
+    global $wo,$db;
+
+    $c = file_get_contents($image);
+    $type = pathinfo('d-'.rand(1111,9999).'.jpg', PATHINFO_EXTENSION);
+    $dataUri = 'data:image/' . $type . ';base64,' . base64_encode($c);
+    return $dataUri;
+}
+
+function getMidJeournyUser($text,$type = 'avatar')
+{
+    global $wo,$db;
+
+    if ($type != 'avatar') {
+        $type .= '_full'; 
+    }
+
+    $dataUri = getUserImageDataUri($wo['user'][$type]);
+
+    $url = 'https://api.replicate.com/v1/predictions';
+
+    $js = '{"version":"30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810ec23f","input":{"image":"'.$dataUri.'","prompt":"'.$text.'","scheduler":"K_EULER_ANCESTRAL","num_inference_steps":500}}';
+
+    $result = requestMidJeourny($url,$js);
+
+    if (!empty($result->status) && in_array($result->status, ['succeeded','starting','processing'])) {
+        if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) {
+            $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                'credits' => $db->dec(($wo['config']['generated_image_price'] * 1))
+            ]);
+        }
+        return [
+            'status' => 200,
+            'id' => $result->id,
+            'status_text' => $wo['lang'][$result->status]
+        ];
+    }
+    elseif (!empty($result->error)) {
+        throw new Exception($result->error);
+    }
+    elseif (!empty($result->detail)) {
+        throw new Exception($result->detail);
+    }
+    else{
+        throw new Exception($result->error);
+    }
+}
+
+function getMidJeournyImage($text,$size,$num_outputs = 1)
+{
+    global $wo,$db;
+
+    $js = getMidJeournyJson($text, $size,$num_outputs);
+
+
+    $url = 'https://api.replicate.com/v1/predictions';
+
+    $result = requestMidJeourny($url,$js);
+
+    if (!empty($result->status) && in_array($result->status, ['succeeded','starting','processing'])) {
+        if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) {
+            $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                'credits' => $db->dec(($wo['config']['generated_image_price'] * $num_outputs))
+            ]);
+        }
+        return [
+            'status' => 200,
+            'id' => $result->id,
+            'status_text' => $wo['lang'][$result->status],
+        ];
+    }
+    elseif (!empty($result->error)) {
+        throw new Exception($result->error);
+    }
+    elseif (!empty($result->detail)) {
+        throw new Exception($result->detail);
+    }
+    else{
+        throw new Exception($result->error);
+    }
+}
+
+function checkMidJeourny($id='')
+{
+    global $wo,$db;
+
+    $url = 'https://api.replicate.com/v1/predictions/' . $id;
+
+    $result = requestMidJeourny($url);
+
+    if (!empty($result->status) && in_array($result->status, ['succeeded','starting','processing'])) {
+        $output = null;
+        if (!empty($result->output)) {
+            $output = $result->output;
+        }
+        return[
+            'status' => 200,
+            'output' => $output,
+            'status_text' => $wo['lang'][$result->status],
+            'credits' => $wo['user']['credits']
+        ];
+    }
+    elseif (!empty($result->error)) {
+        throw new Exception($result->error);
+    }
+    elseif (!empty($result->detail)) {
+        throw new Exception($result->detail);
+    }
+    else{
+        throw new Exception($result->error);
+    }
+}
+
+function requestOpenAi($url , $js = '')
+{
+    global $wo,$db;
+
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    if (!empty($js)) {
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $js);
+    }
+
+    $headers = array();
+    $headers[] = 'Authorization: Bearer ' . $wo['config']['openai_token'];
+    $headers[] = 'Content-Type: application/json';
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        throw new Exception(curl_error($ch));
+    }
+    curl_close($ch);
+
+    $result = json_decode($result);
+    return $result;
+}
+
+function getOpenAiImage($text,$size = '',$num_outputs = 1)
+{
+    global $wo,$db;
+
+    $url = 'https://api.openai.com/v1/images/generations';
+
+    $js = '{"prompt": "'.$text.'","n": '.$num_outputs.',"size":"'.$size.'"}';
+
+    $result = requestOpenAi($url,$js);
+
+    if (!empty($result->data)) {
+        if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) {
+            $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                'credits' => $db->dec(($wo['config']['generated_image_price'] * $num_outputs))
+            ]);
+        }
+        return [
+            'status' => 200,
+            'data' => $result->data
+        ];
+    }
+    elseif (!empty($result->error) && !empty($result->error->message)) {
+        throw new Exception($result->error->message);
+    }
+    else{
+        throw new Exception($wo['lang']['something_wrong']);
+    }
+}
+
+function getOpenAiText($text,$count)
+{
+    global $wo,$db;
+
+    if (getMaxAllowedWords() < $count) {
+        throw new Exception(str_replace('{count}', getMaxAllowedWords(), $wo["lang"]["max_allowed_words"]));
+    }
+
+    $url = 'https://api.openai.com/v1/chat/completions';
+
+
+    $js = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$text.'"}],"max_tokens": '.$count.'}';
+
+    $result = requestOpenAi($url,$js);
+    if (!empty($result->choices)) {
+        if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
+            $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                'credits' => $db->dec(($wo['config']['generated_word_price'] * str_word_count($result->choices[0]->message->content)))
+            ]);
+        }
+        return [
+            'status' => 200,
+            'output' => $result->choices[0]->message->content,
+            'credits' => $db->where('user_id',$wo['user']['id'])->getValue(T_USERS,'credits')
+        ];
+    }
+    elseif (!empty($result->error) && !empty($result->error->message)) {
+        throw new Exception($result->error->message);
+    }
+    else{
+        throw new Exception($wo['lang']['something_wrong']);
+    }
+}
+
+function loadImageContent($url='')
+{
+    $ch = curl_init();
+    $headers = array(
+        'Range: bytes=0-',
+    );
+    $options = array(
+        CURLOPT_URL            => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER         => false,
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLINFO_HEADER_OUT    => true,
+        CURLOPT_USERAGENT => 'okhttp',
+        CURLOPT_ENCODING       => "utf-8",
+        CURLOPT_AUTOREFERER    => true,
+        CURLOPT_COOKIEJAR      => 'cookie.txt',
+        CURLOPT_COOKIEFILE     => 'cookie.txt',
+        CURLOPT_REFERER        => 'https://oaidalleapiprodscus.blob.core.windows.net/',
+        CURLOPT_CONNECTTIMEOUT => 30,
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_MAXREDIRS      => 10,
+    );
+    curl_setopt_array( $ch, $options );
+
+    $c = curl_exec($ch);
+    $image = 'myimage.png';
+    $type = pathinfo($image, PATHINFO_EXTENSION);
+    $dataUri = 'data:image/' . $type . ';base64,' . base64_encode($c);
+    return $dataUri;
+}
+function shouldTopUpImageCredits($credits=0,$count=1)
+{
+    global $wo,$db;
+
+    if (($wo['config']['generated_image_price'] * $count) > $credits) {
+        return true;
+    }
+    return false;
+}
+
+function getAllowedWords()
+{
+    global $wo,$db;
+
+    $array = [
+        20,
+        50,
+        100,
+        250,
+        350,
+        500,
+        1000
+    ];
+
+    $max = $wo['config']['maxCharacters'];
+
+    return array_filter($array, function ($item) use ($max) {
+        return $item < $max;
+    });
+}
+
+function getAllowedImagesCount()
+{
+    global $wo,$db;
+
+    $array = [
+        1,
+        2,
+        3,
+        4
+    ];
+
+    return array_filter($array,function($item) use ($wo){
+        if ($item == 2 || $item == 3) {
+            return ($wo['config']['images_ai'] == 'midjeourny' && $wo['config']['midjeourny_model'] != 'prompthero-openjourney') || $wo['config']['images_ai'] == 'openai';
+        }
+        return true;
+    });
+}
+
+function getMaxAllowedWords()
+{
+    global $wo,$db;
+
+    if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
+
+        if ($wo['user']['credits'] < 1) {
+            return 0;
+        }
+
+        $count = $wo['user']['credits'] / $wo['config']['generated_word_price'];
+
+        if ($count > $wo['config']['maxCharacters']) {
+            return $wo['config']['maxCharacters'];
+        }
+        else{
+            return $count;
+        }
+        
+    }
+    return $wo['config']['maxCharacters'];
+}
+function getMaxAllowedBlogWords()
+{
+    global $wo,$db;
+
+    if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
+
+        if ($wo['user']['credits'] < 1) {
+            return 0;
+        }
+
+        $count = $wo['user']['credits'] / $wo['config']['generated_word_price'];
+
+        return $count;
+        
+    }
+    return 10000;
+}
+function getMaxAllowedImages()
+{
+    global $wo,$db;
+
+    if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) {
+
+        if ($wo['user']['credits'] < 1) {
+            return 0;
+        }
+
+        $count = $wo['user']['credits'] / $wo['config']['generated_image_price'];
+
+        if ($count > end(getAllowedImagesCount())) {
+            return end(getAllowedImagesCount());
+        }
+        else{
+            return $count;
+        }
+    }
+    return 4;
+}
+function getAvailableImageBalance()
+{
+    global $wo,$db;
+
+    if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) {
+        return $wo['user']['credits'] / $wo['config']['generated_image_price'];
+    }
+}
+function getAvailableWordBalance()
+{
+    global $wo,$db;
+
+    if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
+        return $wo['user']['credits'] / $wo['config']['generated_word_price'];
+    }
+}
+function getOpenAiBlog($text,$count)
+{
+    global $wo,$db;
+
+    if (getMaxAllowedBlogWords() < $count) {
+        throw new Exception(str_replace('{count}', getMaxAllowedBlogWords(), $wo["lang"]["max_allowed_words"]));
+    }
+
+    $url = 'https://api.openai.com/v1/chat/completions';
+    $text = 'write a title starts {{title}} end {{endtitle}} and description starts {{description}} end {{enddescription}} and html content starts {{content}} end {{endcontent}} for this article ('.$text.')';
+
+    $js = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$text.'"}],"max_tokens": '.$count.'}';
+    $result = requestOpenAi($url,$js);
+
+    if (!empty($result->choices)) {
+        if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
+            $full_content = str_replace(['{{title}}','{{endtitle}}','{{description}}','{{enddescription}}','{{content}}','{{endcontent}}'], '', strip_tags($result->choices[0]->message->content)) ;
+            $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                'credits' => $db->dec(($wo['config']['generated_word_price'] * str_word_count($full_content)))
+            ]);
+        }
+
+        preg_match('/{{title}}(.*?){{endtitle}}/', $result->choices[0]->message->content, $titleMatches);
+        preg_match('/{{description}}(.*?){{enddescription}}/', $result->choices[0]->message->content, $descriptionMatches);
+        preg_match('/{{content}}(.*?){{endcontent}}/s', $result->choices[0]->message->content, $contentMatches);
+
+        $title = !empty($titleMatches) && !empty($titleMatches[1]) ? $titleMatches[1] : '';
+        $description = !empty($descriptionMatches) && !empty($descriptionMatches[1]) ? $descriptionMatches[1] : '';
+        $content = !empty($contentMatches) && !empty($contentMatches[1]) ? $contentMatches[1] : '';
+
+        return [
+            'status' => 200,
+            'title' => $title,
+            'description' => $description,
+            'content' => $content,
+            'credits' => $db->where('user_id',$wo['user']['id'])->getValue(T_USERS,'credits')
+        ];
+    }
+    elseif (!empty($result->error) && !empty($result->error->message)) {
+        throw new Exception($result->error->message);
+    }
+    else{
+        throw new Exception($wo['lang']['something_wrong']);
+    }
+}
+function getMidJeournyModels($type='stability-ai-stable-diffusion')
+{
+    $midJeournyModels = array(
+        'prompthero-openjourney' => [
+            'size' => [
+                '128x128',
+                '256x256',
+                '512x512',
+                '768x768',
+                '1024x1024'
+            ]
+        ],
+        'stability-ai-stable-diffusion' => [
+            'size' => [
+                '512x512',
+                '768x768'
+            ]
+        ],
+        '22-hours-vintedois-diffusion' => [
+            'size' => [
+                '128x128',
+                '256x256',
+                '384x384',
+                '448x448',
+                '512x512',
+                '576x576',
+                '640x640',
+                '704x704',
+                '768x768',
+                '832x832',
+                '896x896',
+                '960x960',
+                '1024x1024'
+            ]
+        ]
+    );
+
+    return $midJeournyModels[$type]['size'];
+}
+
+function getTwoFactorText()
+{
+    global $wo,$db;
+
+    if ($wo['config']['two_factor_type'] == 'both') {
+        return $wo['lang']['email'] . ' ' . $wo['lang']['sms'];
+    } else if ($wo['config']['two_factor_type'] == 'email') {
+        return $wo['lang']['email'];
+    } else if ($wo['config']['two_factor_type'] == 'phone') {
+        return $wo['lang']['sms'];
+    }
+}
+
+function getCountriesCodes()
+{
+    return [
+            '44' => 'UK (+44)',
+            '1' => 'USA (+1)',
+            '213' => 'Algeria (+213)',
+            '376' => 'Andorra (+376)',
+            '244' => 'Angola (+244)',
+            '1264' => 'Anguilla (+1264)',
+            '1268' => 'Antigua & Barbuda (+1268)',
+            '54' => 'Argentina (+54)',
+            '374' => 'Armenia (+374)',
+            '297' => 'Aruba (+297)',
+            '61' => 'Australia (+61)',
+            '43' => 'Austria (+43)',
+            '994' => 'Azerbaijan (+994)',
+            '1242' => 'Bahamas (+1242)',
+            '973' => 'Bahrain (+973)',
+            '880' => 'Bangladesh (+880)',
+            '1246' => 'Barbados (+1246)',
+            '375' => 'Belarus (+375)',
+            '32' => 'Belgium (+32)',
+            '501' => 'Belize (+501)',
+            '229' => 'Benin (+229)',
+            '1441' => 'Bermuda (+1441)',
+            '975' => 'Bhutan (+975)',
+            '591' => 'Bolivia (+591)',
+            '387' => 'Bosnia Herzegovina (+387)',
+            '267' => 'Botswana (+267)',
+            '55' => 'Brazil (+55)',
+            '673' => 'Brunei (+673)',
+            '359' => 'Bulgaria (+359)',
+            '226' => 'Burkina Faso (+226)',
+            '257' => 'Burundi (+257)',
+            '855' => 'Cambodia (+855)',
+            '237' => 'Cameroon (+237)',
+            '1' => 'Canada (+1)',
+            '238' => 'Cape Verde Islands (+238)',
+            '1345' => 'Cayman Islands (+1345)',
+            '236' => 'Central African Republic (+236)',
+            '56' => 'Chile (+56)',
+            '86' => 'China (+86)',
+            '57' => 'Colombia (+57)',
+            '269' => 'Comoros (+269)',
+            '242' => 'Congo (+242)',
+            '682' => 'Cook Islands (+682)',
+            '506' => 'Costa Rica (+506)',
+            '385' => 'Croatia (+385)',
+            '53' => 'Cuba (+53)',
+            '90392' => 'Cyprus North (+90392)',
+            '357' => 'Cyprus South (+357)',
+            '42' => 'Czech Republic (+42)',
+            '45' => 'Denmark (+45)',
+            '253' => 'Djibouti (+253)',
+            '1809' => 'Dominica (+1809)',
+            '1809' => 'Dominican Republic (+1809)',
+            '593' => 'Ecuador (+593)',
+            '20' => 'Egypt (+20)',
+            '503' => 'El Salvador (+503)',
+            '240' => 'Equatorial Guinea (+240)',
+            '291' => 'Eritrea (+291)',
+            '372' => 'Estonia (+372)',
+            '251' => 'Ethiopia (+251)',
+            '500' => 'Falkland Islands (+500)',
+            '298' => 'Faroe Islands (+298)',
+            '679' => 'Fiji (+679)',
+            '358' => 'Finland (+358)',
+            '33' => 'France (+33)',
+            '594' => 'French Guiana (+594)',
+            '689' => 'French Polynesia (+689)',
+            '241' => 'Gabon (+241)',
+            '220' => 'Gambia (+220)',
+            '7880' => 'Georgia (+7880)',
+            '49' => 'Germany (+49)',
+            '233' => 'Ghana (+233)',
+            '350' => 'Gibraltar (+350)',
+            '30' => 'Greece (+30)',
+            '299' => 'Greenland (+299)',
+            '1473' => 'Grenada (+1473)',
+            '590' => 'Guadeloupe (+590)',
+            '671' => 'Guam (+671)',
+            '502' => 'Guatemala (+502)',
+            '224' => 'Guinea (+224)',
+            '245' => 'Guinea - Bissau (+245)',
+            '592' => 'Guyana (+592)',
+            '509' => 'Haiti (+509)',
+            '504' => 'Honduras (+504)',
+            '852' => 'Hong Kong (+852)',
+            '36' => 'Hungary (+36)',
+            '354' => 'Iceland (+354)',
+            '91' => 'India (+91)',
+            '62' => 'Indonesia (+62)',
+            '98' => 'Iran (+98)',
+            '964' => 'Iraq (+964)',
+            '353' => 'Ireland (+353)',
+            '972' => 'Israel (+972)',
+            '39' => 'Italy (+39)',
+            '1876' => 'Jamaica (+1876)',
+            '81' => 'Japan (+81)',
+            '962' => 'Jordan (+962)',
+            '7' => 'Kazakhstan (+7)',
+            '254' => 'Kenya (+254)',
+            '686' => 'Kiribati (+686)',
+            '850' => 'Korea North (+850)',
+            '82' => 'Korea South (+82)',
+            '965' => 'Kuwait (+965)',
+            '996' => 'Kyrgyzstan (+996)',
+            '856' => 'Laos (+856)',
+            '371' => 'Latvia (+371)',
+            '961' => 'Lebanon (+961)',
+            '266' => 'Lesotho (+266)',
+            '231' => 'Liberia (+231)',
+            '218' => 'Libya (+218)',
+            '417' => 'Liechtenstein (+417)',
+            '370' => 'Lithuania (+370)',
+            '352' => 'Luxembourg (+352)',
+            '853' => 'Macao (+853)',
+            '389' => 'Macedonia (+389)',
+            '261' => 'Madagascar (+261)',
+            '265' => 'Malawi (+265)',
+            '60' => 'Malaysia (+60)',
+            '960' => 'Maldives (+960)',
+            '223' => 'Mali (+223)',
+            '356' => 'Malta (+356)',
+            '692' => 'Marshall Islands (+692)',
+            '596' => 'Martinique (+596)',
+            '222' => 'Mauritania (+222)',
+            '269' => 'Mayotte (+269)',
+            '52' => 'Mexico (+52)',
+            '691' => 'Micronesia (+691)',
+            '373' => 'Moldova (+373)',
+            '377' => 'Monaco (+377)',
+            '976' => 'Mongolia (+976)',
+            '1664' => 'Montserrat (+1664)',
+            '212' => 'Morocco (+212)',
+            '258' => 'Mozambique (+258)',
+            '95' => 'Myanmar (+95)',
+            '264' => 'Namibia (+264)',
+            '674' => 'Nauru (+674)',
+            '977' => 'Nepal (+977)',
+            '31' => 'Netherlands (+31)',
+            '687' => 'New Caledonia (+687)',
+            '64' => 'New Zealand (+64)',
+            '505' => 'Nicaragua (+505)',
+            '227' => 'Niger (+227)',
+            '234' => 'Nigeria (+234)',
+            '683' => 'Niue (+683)',
+            '672' => 'Norfolk Islands (+672)',
+            '670' => 'Northern Marianas (+670)',
+            '47' => 'Norway (+47)',
+            '968' => 'Oman (+968)',
+            '680' => 'Palau (+680)',
+            '507' => 'Panama (+507)',
+            '675' => 'Papua New Guinea (+675)',
+            '595' => 'Paraguay (+595)',
+            '51' => 'Peru (+51)',
+            '63' => 'Philippines (+63)',
+            '48' => 'Poland (+48)',
+            '351' => 'Portugal (+351)',
+            '1787' => 'Puerto Rico (+1787)',
+            '974' => 'Qatar (+974)',
+            '262' => 'Reunion (+262)',
+            '40' => 'Romania (+40)',
+            '7' => 'Russia (+7)',
+            '250' => 'Rwanda (+250)',
+            '378' => 'San Marino (+378)',
+            '239' => 'Sao Tome & Principe (+239)',
+            '966' => 'Saudi Arabia (+966)',
+            '221' => 'Senegal (+221)',
+            '381' => 'Serbia (+381)',
+            '248' => 'Seychelles (+248)',
+            '232' => 'Sierra Leone (+232)',
+            '65' => 'Singapore (+65)',
+            '421' => 'Slovak Republic (+421)',
+            '386' => 'Slovenia (+386)',
+            '677' => 'Solomon Islands (+677)',
+            '252' => 'Somalia (+252)',
+            '27' => 'South Africa (+27)',
+            '34' => 'Spain (+34)',
+            '94' => 'Sri Lanka (+94)',
+            '290' => 'St. Helena (+290)',
+            '1869' => 'St. Kitts (+1869)',
+            '1758' => 'St. Lucia (+1758)',
+            '249' => 'Sudan (+249)',
+            '597' => 'Suriname (+597)',
+            '268' => 'Swaziland (+268)',
+            '46' => 'Sweden (+46)',
+            '41' => 'Switzerland (+41)',
+            '963' => 'Syria (+963)',
+            '886' => 'Taiwan (+886)',
+            '7' => 'Tajikstan (+7)',
+            '66' => 'Thailand (+66)',
+            '228' => 'Togo (+228)',
+            '676' => 'Tonga (+676)',
+            '1868' => 'Trinidad & Tobago (+1868)',
+            '216' => 'Tunisia (+216)',
+            '90' => 'Turkey (+90)',
+            '7' => 'Turkmenistan (+7)',
+            '993' => 'Turkmenistan (+993)',
+            '1649' => 'Turks & Caicos Islands (+1649)',
+            '688' => 'Tuvalu (+688)',
+            '256' => 'Uganda (+256)',
+            '380' => 'Ukraine (+380)',
+            '971' => 'United Arab Emirates (+971)',
+            '598' => 'Uruguay (+598)',
+            '7' => 'Uzbekistan (+7)',
+            '678' => 'Vanuatu (+678)',
+            '379' => 'Vatican City (+379)',
+            '58' => 'Venezuela (+58)',
+            '84' => 'Vietnam (+84)',
+            '84' => 'Virgin Islands - British (+1284)',
+            '84' => 'Virgin Islands - US (+1340)',
+            '681' => 'Wallis & Futuna (+681)',
+            '969' => 'Yemen (North)(+969)',
+            '967' => 'Yemen (South)(+967)',
+            '260' => 'Zambia (+260)',
+            '263' => 'Zimbabwe (+263)',
+        ];
+}
+function getAuthyQR($authy_id='')
+{
+    global $sqlConnect,$db,$wo;
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, 'https://api.authy.com/protected/json/users/'.$authy_id.'/secret');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, "label=\"".$wo['config']['siteTitle']."(".$wo['user']['username'].")\"&qr_size=\"300\"");
+
+    $headers = array();
+    $headers[] = 'X-Authy-Api-Key: '.$wo['config']['authy_token'];
+    $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        return false;
+    }
+    curl_close($ch);
+    $result = json_decode($result);
+    if (!empty($result) && !empty($result->qr_code)) {
+        return $result->qr_code;
+    }
+    return false;
+}
+function verifyAuthy($code='',$authy_id='')
+{
+    global $sqlConnect,$db,$wo;
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, 'https://api.authy.com/protected/json/verify/'.$code.'/'.$authy_id);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+
+
+    $headers = array();
+    $headers[] = 'X-Authy-Api-Key: '.$wo['config']['authy_token'];
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        return false;
+    }
+    curl_close($ch);
+    $result = json_decode($result);
+    if (!empty($result) && !empty($result->success)) {
+        return true;
+    }
+    return false;
 }

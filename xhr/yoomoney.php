@@ -45,7 +45,7 @@ if ($f == "yoomoney") {
             exit();
 		}
 		else{
-			$_POST['label'] = 1;
+			//$_POST['label'] = 1;
 
 			if (!empty($_POST['label'])) {
 				$user = $db->where('user_id',Wo_Secure($_POST['label']))->getOne(T_USERS);

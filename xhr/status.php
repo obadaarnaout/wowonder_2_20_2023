@@ -106,7 +106,7 @@ if ($f == 'status') {
                                 $image_thumb      = $dir . '/' . Wo_GenerateKey() . '_' . date('d') . '_' . md5(time()) . "_image.jpeg";
                                 $output_thumb     = shell_exec("$ffmpeg_b -ss \"$thumb_1_duration\" -i " . $media['filename'] . " -vframes 1 -f mjpeg $image_thumb 2<&1");
                                 if (file_exists($image_thumb) && !empty(@getimagesize($image_thumb))) {
-                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $image_thumb, $image_thumb, 60);
+                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $image_thumb, $image_thumb, $wo['config']['images_quality']);
                                     $wo['config']['amazone_s3']   = $amazone_s3;
                                     $wo['config']['wasabi_storage']   = $wasabi_storage;
                                     $wo['config']['backblaze_storage']   = $backblaze_storage;
@@ -156,7 +156,7 @@ if ($f == 'status') {
                                     if (!empty($fileget)) {
                                         $importImage = @file_put_contents($thumb, $fileget);
                                     }
-                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $thumb, $last_file, 60);
+                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $thumb, $last_file, $wo['config']['images_quality']);
                                     $wo['config']['amazone_s3']   = $amazone_s3;
                                     $wo['config']['wasabi_storage']   = $wasabi_storage;
                                     $wo['config']['backblaze_storage']   = $backblaze_storage;
@@ -217,7 +217,7 @@ if ($f == 'status') {
                                     if (!empty($fileget)) {
                                         $importImage = @file_put_contents($thumb, $fileget);
                                     }
-                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $thumb, $last_file, 60);
+                                    $crop_image                   = Wo_Resize_Crop_Image(400, 400, $thumb, $last_file, $wo['config']['images_quality']);
                                     $wo['config']['amazone_s3']   = $amazone_s3;
                                     $wo['config']['wasabi_storage']   = $wasabi_storage;
                                     $wo['config']['backblaze_storage']   = $backblaze_storage;

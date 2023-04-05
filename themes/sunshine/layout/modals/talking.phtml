@@ -160,6 +160,7 @@ Twilio.Video.connect('<?php echo $wo['incall']['access_token'];?>', { name: '<?p
     $.get(Wo_Ajax_Requests_File(), {f:'cancel_call'}, function (data) {});
     location.href = "<?php echo($wo['config']['site_url']) ?>";
   });
+  
   $(document).on('click', 'a[data-ajax]', function(e) {
     $.get(Wo_Ajax_Requests_File(), {f:'cancel_call'}, function (data) {});
       room.disconnect();

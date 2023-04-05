@@ -10,6 +10,71 @@
 
 	<form class="form-horizontal setting-change-password-form" method="post">
 		<div class="setting-password-alert setting-update-alert"></div>
+
+
+    <?php if ($wo['setting']['two_factor'] == '0') { ?>
+        
+        <?php if ($wo['methodCount'] > 1) { ?>
+            <div class="wow_form_fields">
+                <label for="two_factor_method"><?php echo $wo['lang']['two_factor_method'] ?></label>
+                <select id="two_factor_method" name="two_factor_method" class="form-control" onchange="showMethod(this)">
+                    <?php if ($wo['config']['two_factor'] == '1') { ?>
+                        <option value="two_factor" <?php echo ($wo['setting']['two_factor_method'] == 'two_factor') ? 'selected': '';?>><?php echo getTwoFactorText(); ?></option>
+                    <?php } ?>
+                    <?php if ($wo['config']['google_authenticator'] == '1') { ?>
+                    <option value="google" <?php echo ($wo['setting']['two_factor_method'] == 'google') ? 'selected': '';?>><?php echo $wo['lang']['google_authenticator']; ?></option>
+                    <?php } ?>
+                    <?php if ($wo['config']['authy_settings'] == '1') { ?>
+                    <option value="authy" <?php echo ($wo['setting']['two_factor_method'] == 'authy') ? 'selected': '';?>><?php echo $wo['lang']['authy_app']; ?></option>
+                    <?php } ?>
+                </select>
+            </div>
+        <?php }else{
+            $method = '';
+            if ($wo['config']['two_factor'] == 1) {
+                $method = 'two_factor';
+            }
+            elseif ($wo['config']['google_authenticator'] == '1') {
+                $method = 'google';
+            }
+            elseif ($wo['config']['authy_settings'] == '1') {
+                $method = 'authy';
+            } ?>
+            <input type="hidden" id="two_factor_method" name="two_factor_method" value="<?php echo $method; ?>">
+        <?php } ?>
+        <?php if ($wo['config']['google_authenticator'] == '1') { ?>
+        <div class="form-group google_authenticator" <?php if ($wo['setting']['two_factor_method'] != 'google') { ?>style="display:none;"<?php } ?>>
+            <img src="<?php echo $wo['googleQR']; ?>">
+            <div class="form-group col-lg-12">
+                <br>
+                <ol>
+                    <li><?php echo $wo['lang']['authenticator_download']; ?></li>
+                    <li><?php echo $wo['lang']['authenticator_set']; ?></li>
+                    <li><?php echo $wo['lang']['authenticator_verify']; ?></li>
+                    <li><?php echo $wo['lang']['authenticator_otp']; ?></li>
+                </ol>
+                <br>
+                <div>
+                    <input id="verify_google_code" class="form-control shop_input" type="text" placeholder="<?php echo $wo['lang']['confirm_code']; ?>">
+                </div>
+            </div>
+        </div>
+        <?php } ?>
+        <?php if ($wo['config']['authy_settings'] == '1') { ?>
+            <?php //if (!empty($pt->settings->authy_id)) { ?>
+                <div class="form-group col-lg-12 authy_auth" <?php if ($wo['setting']['two_factor_method'] != 'authy') { ?>style="display:none;"<?php } ?>>
+                    <img src="{{authyQR}}">
+                </div>
+            <?php //} ?>
+        <?php } ?>
+    <?php }else{ ?>
+        <div class="form-group">
+            <p><?php echo(str_replace('{method}', $wo['factor_used'], $wo['lang']['two_auth_currenly_enabled'])) ?></p>
+            <input type="hidden" name="two_factor" value="0">
+        </div>
+    <?php } ?>
+
+
         
 		<?php if ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone') { ?>
 			<div class="wow_form_fields">
@@ -17,29 +82,202 @@
 				<input name="phone_number" id="phone_number" type="text" class="form-control input-md" autocomplete="off" placeholder="+15417543010" value="<?php echo $wo['setting']['phone_number']?>">
 			</div>
 		<?php } ?>
-		<div class="wow_form_fields">
-			<label for="two_factor"><?php echo $wo['lang']['two_factor']; ?></label>  
-			<select id="two_factor_select" name="two_factor" class="form-control">
-				<option value="enable" <?php echo ($wo['setting']['two_factor'] == '1')   ? 'selected' : '';?> ><?php echo $wo['lang']['enable']; ?></option>
-				<option value="disable" <?php echo ($wo['setting']['two_factor'] == '0')   ? 'selected' : '';?> ><?php echo $wo['lang']['disable']; ?></option>
-			</select>
-			<span class="help-block"><?php echo $wo['lang']['two_factor_description'] ?></small>
-		</div>
 		<input type="hidden" name="" id="two_factor_value">
 		
 		<div class="text-center">
-			<button type="button" class="btn btn-main btn-mat btn-mat-raised add_wow_loader" id="submit_two_factor_btn"><?php echo $wo['lang']['save']; ?></button>
+      <?php if ($wo['setting']['two_factor'] == '0') { ?>
+        <button type="button" id="request_code" class="btn btn-main setting-panel-mdbtn" onclick="requestCode()"><?php echo $wo['lang']['save']; ?></button>
+        <?php }else{ ?>
+          <input type="hidden" name="two_factor" value="disable">
+			   <button type="button" class="btn btn-main btn-mat btn-mat-raised add_wow_loader" id="submit_two_factor_btn"><?php echo $wo['lang']['deactivate']; ?></button>
+         <?php } ?>
 		</div>
 		
          <input type="hidden" name="user_id" value="<?php echo $wo['setting']['user_id'];?>">
          <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
    </form>
 </div>
+<div class="modal fade" id="verify_modal" role="dialog">
+    <div class="modal-dialog modal-md wow_mat_mdl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+            <h5 class="modal-title"><?php echo $wo['lang']['confirm_code']; ?></h5>
+          </div>
+            
+            <div class="modal-body">
+                <div id="verify_alert" style="color: red;"></div>
+                <form id="verify_form" method="post">
+                    <div class="authy_qr"></div>
+                    <div class="wow_form_fields">
+                        <input id="verify_authy_code" type="text" placeholder="<?php echo $wo['lang']['confirm_code']; ?>">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-main" onclick="verifyCode()" id="verify_code_button"><?php echo $wo['lang']['send']; ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="authy_modal" role="dialog">
+    <div class="modal-dialog modal-md wow_mat_mdl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+            <h5 class="modal-title"><?php echo $wo['lang']['authy_register']; ?></h5>
+          </div>
+            <div class="modal-body">
+                <div id="authy_alert" style="color: red;"></div>
+                <form id="authy_form" method="post">
+                    <div class="wow_form_fields">
+                        <input id="authy_email" type="text" placeholder="<?php echo $wo['lang']['email']; ?>" value="<?php echo $wo['setting']['email'];?>">
+                    </div>
+                    <div class="wow_form_fields">
+                        <div class="col-md-4">
+                            <label for="country_code"><?php echo $wo['lang']['country_code']; ?></label>
+                            <select id="country_code" name="country_code">
+                                <?php foreach ($wo['countries_codes'] as $key => $value) { ?>
+                                    <option value="<?php echo($key) ?>"><?php echo($value) ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="authy_phone"><?php echo $wo['lang']['phone_number']; ?></label>
+                            <input id="authy_phone" type="text" placeholder="<?php echo $wo['lang']['phone_number']; ?>" value="<?php echo $wo['setting']['phone_number'];?>">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <br>
+                      <div class="ball-pulse"><div></div><div></div><div></div></div>
+                        <button type="button" class="btn btn-main" onclick="authyRegister()" id="authy_button"><?php echo $wo['lang']['send']; ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
+  <?php if ($wo['setting']['two_factor'] == '0') { ?>
+    function verifyCode() {
+        $('#verify_code_button').text("<?php echo $wo['lang']['please_wait']; ?>");
+        $.post(Wo_Ajax_Requests_File() + '?f=update_two_factor&s=verify_code', {user_id: "<?php echo $wo['setting']['user_id'];?>", code: $('#verify_authy_code').val(), factor_method: $('#two_factor_method').val()}, function(data, textStatus, xhr) {
+            $('#verify_code_button').text("<?php echo $wo['lang']['send']; ?>");
+            if (data.status == 200) {
+                $('#verify_alert').html('<div class="alert alert-success">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('#verify_alert').html('');
+                    window.location.reload();
+                },2000);
+            }
+            else{
+                $('#verify_alert').html('<div class="alert alert-danger">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('#verify_alert').html('');
+                },2000);
+            }
+        });
+    }
+    function authyRegister() {
+        $('#authy_button').text("<?php echo $wo['lang']['please_wait']; ?>");
+        $.post(Wo_Ajax_Requests_File() + '?f=update_two_factor&s=authy_register', {user_id: "<?php echo $wo['setting']['user_id'];?>", email: $('#authy_email').val(), phone: $('#authy_phone').val(), country_code: $('#country_code').val()}, function(data, textStatus, xhr) {
+            $('#authy_button').text("<?php echo $wo['lang']['send']; ?>");
+            if (data.status == 200) {
+                $('#authy_alert').html('<div class="alert alert-success">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('#authy_alert').html('');
+                    $('#authy_modal').modal('hide');
+                    
+                    if (typeof data.qr != 'undefined' && data.qr != '') {
+                        $('#verify_modal').modal({
+                         show: true
+                        });
+                        $('.authy_qr').html('<img src="'+data.qr+'">');
+                    }
+                    else{
+                        window.location.reload();
+                    }
+                },2000);
+            }
+            else{
+                $('#authy_alert').html('<div class="alert alert-danger">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('#authy_alert').html('');
+                },2000);
+            }
+        });
+    }
+    function verifyGoogleCode() {
+        $('#request_code').text("<?php echo $wo['lang']['please_wait']; ?>");
+        $.post(Wo_Ajax_Requests_File() + '?f=update_two_factor&s=verify_code', {user_id: "<?php echo $wo['setting']['user_id'];?>", code: $('#verify_google_code').val(), factor_method: $('#two_factor_method').val()}, function(data, textStatus, xhr) {
+            $('#request_code').text("<?php echo $wo['lang']['save']; ?>");
+            if (data.status == 200) {
+                $('.setting-password-alert').html('<div class="alert alert-success">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('.setting-password-alert').html('');
+                    window.location.reload();
+                },2000);
+            }
+            else{
+                $('.setting-password-alert').html('<div class="alert alert-danger">' + data.message + '</div>');
+                setTimeout(() => {
+                    $('.setting-password-alert').html('');
+                },2000);
+            }
+        });
+    }
+    function requestCode() {
+        if ($('#two_factor_method').val() == 'google') {
+            verifyGoogleCode();
+            return false;
+        }
+        
+        if ($('#two_factor_method').val() == 'authy') {
+            <?php if (empty($wo['setting']['authy_id'])) { ?>
+              $('#authy_modal').modal({
+               show: true
+              });
+            <?php }else{ ?>
+              $('#verify_modal').modal({
+                         show: true
+                        });
+            <?php } ?>
+            return false;
+        }
+        
+        $('#request_code').text("<?php echo $wo['lang']['please_wait']; ?>");
+        $.post(Wo_Ajax_Requests_File() + '?f=update_two_factor&s=enable', {user_id: "<?php echo $wo['setting']['user_id'];?>", factor_method: $('#two_factor_method').val(), phone_number: $('#phone_number').val()}, function(data, textStatus, xhr) {
+            $('#request_code').text("<?php echo $wo['lang']['save']; ?>");
+            if (data.status == 200) {
+                $('.setting-password-alert').html('<div class="alert alert-success">' + data.message + '</div>');
+                $('.alert-success').fadeIn(300);
+                $('#verify_code').modal('show');
+            }
+            else{
+                $('.setting-password-alert').html('<div class="alert alert-danger">' + data.message + '</div>');
+                $('.alert-danger').fadeIn(300);
+            }
+        });
+    }
+  <?php } ?>
+  function showMethod(self) {
+        if ($(self).val() == 'google') {
+            $('.google_authenticator').slideDown();
+            $('.authy_auth').slideUp();
+        }
+        else if($(self).val() == 'authy') {
+            $('.authy_auth').slideDown();
+            $('.google_authenticator').slideUp();
+        }
+        else{
+            $('.google_authenticator').slideUp();
+            $('.authy_auth').slideUp();
+        }
+    }
   
   $(document).on('click', '#submit_two_factor_btn', function(event) {
     $.ajax({
-    url: Wo_Ajax_Requests_File() + '?f=update_two_factor&s='+$('#two_factor_select').val(),
+    url: Wo_Ajax_Requests_File() + '?f=update_two_factor&s=disable',
     type: 'POST',
     data:$('form.setting-change-password-form').serialize(),
     beforeSend: function() {
@@ -50,10 +288,7 @@
         $('.setting-password-alert').html('<div class="alert alert-success">' + data.message + '</div>');
         $('.alert-success').fadeIn('fast', function() {
           $(this).delay(2000).slideUp(500, function() {
-              $(this).remove();
-              if ($('#two_factor_select').val() == 'enable') {
-                $('#verify_code').modal('show');
-              }
+              location.reload();
           });
         });
       } else if (data.status == 400) {

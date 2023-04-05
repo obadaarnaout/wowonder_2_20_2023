@@ -145,6 +145,17 @@
                             <label for="chck-OkLogin" class="check-trail"><span class="check-handler"></span></label>
                         </div>
                         <div class="clearfix"></div>
+                        <hr>
+                        <div class="float-left">
+                            <label for="tiktok_login" class="main-label">TikTok Login</label>
+                            <br><small class="admin-info">Enable the ability for users to login to your site using their ok.ru account.</small>
+                        </div>
+                        <div class="form-group float-right switcher">
+                            <input type="hidden" name="tiktok_login" value="0" />
+                            <input type="checkbox" name="tiktok_login" id="chck-tiktok_login" value="1" <?php echo ($wo['config']['tiktok_login'] == 1) ? 'checked': '';?>>
+                            <label for="chck-tiktok_login" class="check-trail"><span class="check-handler"></span></label>
+                        </div>
+                        <div class="clearfix"></div>
                         <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
                     </form>
                 </div>
@@ -300,6 +311,17 @@
                         <div class="form-group form-float">
                             <div class="form-line">
                                 <input type="text" id="OkAppSecretkey" name="OkAppSecretkey" class="form-control" value="<?php echo $wo['config']['OkAppSecretkey']?>" placeholder="Application Secret Key">
+                            </div>
+                        </div>
+                        <label class="form-label main-label" style="background: #005CF1; color: #fff; margin-bottom: 12px;">TikTok Configuration</label>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <input type="text" id="tiktok_client_key" name="tiktok_client_key" class="form-control" value="<?php echo $wo['config']['tiktok_client_key']?>" placeholder="Client key">
+                            </div>
+                        </div>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <input type="text" id="tiktok_client_secret" name="tiktok_client_secret" class="form-control" value="<?php echo $wo['config']['tiktok_client_secret']?>" placeholder="Client secret">
                             </div>
                         </div>
                         <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">

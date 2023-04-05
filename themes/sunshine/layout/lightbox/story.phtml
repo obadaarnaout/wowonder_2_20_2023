@@ -38,15 +38,21 @@
 		    <?php } ?>
 		    <?php if (!$wo['story']['is_owner']) { ?>
 			<ul class="story_reacts_box reactions-box reactions-box-story-container-<?php echo $wo['story']['id']; ?>" data-id="<?php echo $wo['story']['id']; ?>">
-			      <?php if (!empty($wo['reactions_types'])) {
-			          foreach ($wo['reactions_types'] as $key => $value) {
-			            if ($value['status'] == 1) {
-			           ?>
-			        <li  style="<?php if ($wo['story']['is_owner']) {?> left: 10px; <?php }else{ ?> right: 10px; <?php }?>"class="reaction reaction-<?php echo $value['id'];?> animated_2" data-reaction="<?php echo $value['name'];?>" data-reaction-id="<?php echo $value['id'];?>" data-reaction-lang="<?php echo $value['name'];?>" data-post-id="<?php echo $wo['story']['id']; ?>" onclick="Wo_RegisterStoryReaction(this,'<?php echo($value['sunshine_small_icon']) ?>');">
-			          <img class="" src="<?php echo $value['sunshine_icon'];?>" alt="<?php echo $value['name'];?>">
-			        </li>
-			      <?php } } } ?>
-			    </ul>
+					<?php if (!empty($wo['reactions_types'])) {
+					    foreach ($wo['reactions_types'] as $key => $value) {
+					    	if ($value['status'] == 1) {
+
+					     ?>
+						<li style="<?php if ($wo['story']['is_owner']) {?> left: 10px; <?php }else{ ?> right: 10px; <?php }?>" class="reaction reaction-<?php echo $value['id'];?>" data-reaction="<?php echo $value['name'];?>" data-reaction-id="<?php echo $value['id'];?>" data-reaction-lang="<?php echo $value['name'];?>" data-post-id="<?php echo $wo['story']['id']; ?>" onclick="Wo_RegisterStoryReaction(this,'<?php echo($value['wowonder_small_icon']) ?>',<?php echo($value['is_html']) ?>);">
+							<?php if (preg_match("/<[^<]+>/",$value['wowonder_icon'],$m)) {
+								  	echo($value['wowonder_icon']);
+								 }
+								 else{ ?>
+						     	<img src="<?php echo($value['wowonder_icon']) ?>">
+						    <?php } ?>
+						</li>
+					<?php } } } ?>
+				</ul>
 			<?php } ?>
 			<?php if ($wo['story']['is_owner']) { ?>
 				<div class="close-lightbox" onclick="Wo_DeleteStatus(<?php echo $wo['story']['id']; ?>)">
@@ -85,6 +91,7 @@
 	<?php if ($wo['story']['is_owner']) { ?>
 	<div class="comment-section">
 		<div class="comment-section-inner">
+
 			<div class="clear"></div>
 			<div class="comment-inner-header views_count">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -114,8 +121,8 @@
 			</div>
 			<?php if (!empty($wo['story']['story_views']) && count($wo['story']['story_views']) > 9) { ?>
 				<div class="load-more pointer" onclick="Wo_GetMoreStoryViews(<?php echo $wo['story']['id'];?>,this);">
-					<button class="btn text-center wo_load_more" id="load_more_friends">
-						<span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"></path></svg></span> <?php echo $wo['lang']['load_more'];?>
+					<button class="btn btn-default text-center pointer" id="load_more_friends">
+						<svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><polyline points="6 9 12 15 18 9"></polyline></svg> <?php echo $wo['lang']['load_more'];?>
 					</button>
 				</div>
 			<?php } ?>

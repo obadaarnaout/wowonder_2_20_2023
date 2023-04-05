@@ -7,8 +7,8 @@ if ($f == 'login') {
     if (!empty($_COOKIE['user_id'])) {
         $_COOKIE['user_id'] = '';
         unset($_COOKIE['user_id']);
-        setcookie('user_id', null, -1);
-        setcookie('user_id', null, -1, '/');
+        setcookie('user_id', '', -1);
+        setcookie('user_id', '', -1, '/');
     }
     $data_ = array();
     $phone = 0;
@@ -45,6 +45,9 @@ if ($f == 'login') {
             $two_factor_hash = bin2hex(random_bytes(18));
             $db->where('user_id',$_SESSION['code_id'])->update(T_USERS,array('two_factor_hash' => $two_factor_hash));
             cache($_SESSION['code_id'], 'users', 'delete');
+            $user_data = Wo_UserData($_SESSION['code_id']);
+            setcookie("two_factor_method", $user_data['two_factor_method'], time() + (60 * 60), "/");
+            setcookie("two_factor_username", $user_data['username'], time() + (60 * 60), "/");
 
             $_SESSION['two_factor_hash'] = $two_factor_hash;
             setcookie("two_factor_hash", $two_factor_hash, time() + (60 * 60));

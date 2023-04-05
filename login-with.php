@@ -22,6 +22,7 @@ $types = array(
     'Discord',
     'Mailru',
     'OkRu',
+    'TikTok'
 );
 if (!empty($_GET['state']) && $_GET['state'] == 'OkRu' && !empty($_GET['code'])) {
     $_GET['provider'] = 'OkRu';
@@ -33,8 +34,8 @@ if (!empty($provider)) {
     if (!empty($_COOKIE['provider'])) {
         $_COOKIE['provider'] = '';
         unset($_COOKIE['provider']);
-        setcookie('provider', null, -1);
-        setcookie('provider', null, -1, '/');
+        setcookie('provider', '', -1);
+        setcookie('provider', '', -1, '/');
     }
     setcookie('provider', $provider, time() + (60 * 60), '/');
 }
@@ -44,9 +45,9 @@ else if(!empty($_COOKIE['provider']) && in_array($_COOKIE['provider'], $types)){
 }
 if (!empty($provider) && $provider != 'OkRu') {
     require_once('assets/libraries/social-login/config.php');
-    require_once('assets/libraries/social-login/autoload.php');
+    require_once('assets/libraries/social-login/vendor/autoload.php');
 }
-else{
+else if($provider == 'OkRu'){
     if (empty($_GET['code'])) {
         header("Location: https://connect.ok.ru/oauth/authorize?client_id=".$wo['config']['OkAppId']."&scope=VALUABLE_ACCESS&response_type=code&redirect_uri=".$wo['config']['site_url']."/login-with.php&layout=w&state=OkRu");
         exit();
@@ -89,6 +90,36 @@ if (isset($provider) && in_array($provider, $types)) {
             }
             else{
                 echo " <b><a href='" . Wo_SeoLink('index.php?link1=welcome') . "'>Try again<a></b>";
+                exit();
+            }
+        }
+        else if ($provider == 'TikTok') {
+            require_once('./assets/libraries/tiktok/src/Connector.php');
+            $_TK = new Connector($wo['config']['tiktok_client_key'], $wo['config']['tiktok_client_secret'], $LoginWithConfig['callback']);
+            if (Connector::receivingResponse()) { 
+                try {
+                    $token = $_TK->verifyCode($_GET[Connector::CODE_PARAM]);
+                    // Your logic to store the access token
+                    $user_profile = $_TK->getUser();
+                    $user_profile->identifier = $user_profile->union_id;
+                    $user_profile->displayName = $user_profile->display_name;
+                    $user_profile->firstName = $user_profile->display_name;
+                    $user_profile->email = '';
+                    $user_profile->profileURL = '';
+                    $user_profile->lastName = '';
+                    $user_profile->photoURL = $user_profile->avatar_larger;
+                    $user_profile->description = '';
+                    $user_profile->gender = '';
+                    // Your logic to manage the User info
+                    //$videos = $_TK->getUserVideoPages();
+                    // Your logic to manage the Video info
+                } catch (Exception $e) {
+                    echo "Error: ".$e->getMessage();
+                    echo '<br /><a href="'.$_TK->getRedirect().'">Retry</a>';
+                    exit();
+                }
+            } else {
+                header("Location: " . $_TK->getRedirect());
                 exit();
             }
         }
@@ -184,7 +215,9 @@ if (isset($provider) && in_array($provider, $types)) {
                 }
                 if ($provider == 'Facebook') {
                     $fa_social_url       = @explode('/', $user_profile->profileURL);
-                    $re_data['facebook'] = Wo_Secure($fa_social_url[4]);
+                    if (!empty($fa_social_url[4])) {
+                        $re_data['facebook'] = Wo_Secure($fa_social_url[4]);
+                    }
                     $re_data['gender'] = 'male';
                     if (!empty($user_profile->gender)) {
                         if ($user_profile->gender == 'male') {
@@ -234,6 +267,7 @@ if (isset($provider) && in_array($provider, $types)) {
                         unset($_SESSION['ref']);
                     }
                 }
+                $wo['config']['user_registration'] = 1;
                 if (Wo_RegisterUser($re_data) === true) {
                     Wo_SetLoginWithSession($user_email);
                     $user_id = Wo_UserIdFromEmail($user_email);
@@ -253,7 +287,7 @@ if (isset($provider) && in_array($provider, $types)) {
                         $explode2  = @end(explode('.', $imported_image));
                         $explode3  = @explode('.', $imported_image);
                         $last_file = $explode3[0] . '_full.' . $explode2;
-                        $compress = Wo_CompressImage($imported_image, $last_file, 50);
+                        $compress = Wo_CompressImage($imported_image, $last_file, $wo['config']['images_quality']);
                         if ($compress) {
                             $upload_s3 = Wo_UploadToS3($last_file);
                             $query = mysqli_query($sqlConnect, "INSERT INTO " . T_POSTS . " (`user_id`, `postFile`, `time`, `postType`, `postPrivacy`) VALUES ('$user_id', '" . Wo_Secure($last_file) . "', '" . Wo_Secure(time()) . "', 'profile_picture_deleted', '0')");

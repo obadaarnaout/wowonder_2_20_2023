@@ -1525,20 +1525,19 @@ function Wo_RegisterCommentLike(comment_id) {
 
 <?php if ($wo['config']['website_mode'] == 'linkedin') { ?>
 function OpenToModal(self){
-  if ($(self).val() == 'finding_a_job') {
+  $('#finding_a_job_modal').modal('hide');
+  $('#providing_services_modal').modal('hide');
+  $('#create_hiring_modal').modal('hide');
+
+  if (self == '#finding_a_job_modal') {
     $('#finding_a_job_modal').modal('show');
   }
-  else if($(self).val() == 'providing_services'){
+  else if(self == '#providing_services_modal'){
     $('#providing_services_modal').modal('show');
     $('#providing_services_input').tagsinput({});
   }
-  else if($(self).val() == 'hiring'){
+  else if(self == '#create_hiring_modal'){
     $('#create_hiring_modal').modal('show');
-  }
-  else{
-    $('#finding_a_job_modal').modal('hide');
-    $('#providing_services_modal').modal('hide');
-    $('#create_hiring_modal').modal('hide');
   }
 }
 <?php } ?>
@@ -1740,4 +1739,45 @@ function AddYandexResult(target,self,result_co) {
   $(target).val($(self).text());
   $(result_co).html('');
 }
+
+const loadImageFromUrl = url => fetch(url)
+                            .then(response => response.blob())
+                            .then(blob => new Promise((resolve, reject) => {
+                            const reader = new FileReader()
+                            reader.onloadend = () => resolve(reader.result)
+                            reader.onerror = reject
+                            reader.readAsDataURL(blob)
+                           }));
+function imageDataToFile(dataurl, filename) {
+   var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+   bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+   while(n--){
+   u8arr[n] = bstr.charCodeAt(n);
+   }
+  return new File([u8arr], filename, {type:mime});
+}
+
+
+// Add an event listener to the window object to detect scroll events
+window.addEventListener('scroll', function() {
+  const videoElements = document.getElementsByTagName('video');
+  // Iterate over each video element and check if it's currently playing
+  for (let i = 0; i < videoElements.length; i++) {
+    const videoElement = videoElements[i];
+
+    // Get the position and dimensions of the video element relative to the viewport
+    const videoRect = videoElement.getBoundingClientRect();
+
+    // Get the viewport height
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+    // Check if the video element is fully or partially visible in the viewport
+    const isVisible = videoRect.top <= viewportHeight && videoRect.bottom >= 0;
+
+    if (isVisible && !videoElement.paused) {
+    } else {
+      videoElement.pause();
+    }
+  }
+});
 </script>

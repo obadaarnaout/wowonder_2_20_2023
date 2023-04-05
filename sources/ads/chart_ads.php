@@ -23,14 +23,18 @@ if (isset($_GET['id']) && is_numeric($_GET['id']) && $_GET['id'] > 0) {
 		
 		$sqlclicks = "SELECT DATE(dt) DateOnly, SUM(clicks) AS ADClicks , SUM(spend) AS Spend FROM `" . T_USERADS_DATA ."` WHERE user_id = ". Wo_Secure($ad_data['user_id'])." AND ad_id = " . Wo_Secure($_GET['id']) . " AND clicks > 0 GROUP BY DateOnly,clicks,Spend ORDER BY dt DESC LIMIT 30";
 		$queryclicks = mysqli_query($sqlConnect, $sqlclicks);
-		while ($fetched_data = mysqli_fetch_assoc($queryclicks)) {
-			$wo['clicks'][] = $fetched_data;
+		if ($queryclicks != false && mysqli_num_rows($queryclicks)) {
+			while ($fetched_data = mysqli_fetch_assoc($queryclicks)) {
+				$wo['clicks'][] = $fetched_data;
+			}
 		}
 
 		$sqlviews = "SELECT DATE(dt) DateOnly, SUM(views) AS ADviews , SUM(spend) AS Spend FROM `" . T_USERADS_DATA ."` WHERE user_id = ". Wo_Secure($ad_data['user_id'])." AND ad_id = " . Wo_Secure($_GET['id']) . " AND views > 0 GROUP BY DateOnly,views,Spend ORDER BY dt DESC LIMIT 30";
 		$queryviews = mysqli_query($sqlConnect, $sqlviews);
-		while ($fetched_data = mysqli_fetch_assoc($queryviews)) {
-			$wo['views'][] = $fetched_data;
+		if ($queryviews != false && mysqli_num_rows($queryviews)) {
+			while ($fetched_data = mysqli_fetch_assoc($queryviews)) {
+				$wo['views'][] = $fetched_data;
+			}
 		}
 
 

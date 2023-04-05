@@ -353,6 +353,36 @@
                         </div>
                         <hr>
                         <div class="float-left">
+                            <label for="google_authenticator" class="main-label">Google Authenticator Settings</label>
+                            <br><small class="admin-info">Google Authenticator code when user login.</small>
+                        </div>
+                        <div class="form-group float-right switcher">
+                            <input type="hidden" name="google_authenticator" value="0" />
+                            <input type="checkbox" name="google_authenticator" id="chck-google_authenticator" value="1" <?php echo ($wo['config']['google_authenticator'] == '1') ? 'checked': '';?>>
+                            <label for="chck-google_authenticator" class="check-trail"><span class="check-handler"></span></label>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr>
+                        <div class="float-left">
+                            <label for="authy_settings" class="main-label">Authy Settings</label>
+                            <br><small class="admin-info">Authy code when user login.</small>
+                        </div>
+                        <div class="form-group float-right switcher">
+                            <input type="hidden" name="authy_settings" value="0" />
+                            <input type="checkbox" name="authy_settings" id="chck-authy_settings" value="1" <?php echo ($wo['config']['authy_settings'] == '1') ? 'checked': '';?>>
+                            <label for="chck-authy_settings" class="check-trail"><span class="check-handler"></span></label>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <label class="form-label">Authy Token</label>
+                                <input type="text" id="authy_token" name="authy_token" class="form-control" value="<?php echo $wo['config']['authy_token'] ?>">
+                                <small class="admin-info">Authy Token from your twilio account</small>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr>
+                        <div class="float-left">
                             <label for="emailValidation" class="main-label">Account Validation</label>
                             <br><small class="admin-info">Send an activation link after registration.</small>
                         </div>
@@ -426,6 +456,37 @@
                                 <input type="text" id="user_limit" name="user_limit" class="form-control" value="<?php echo $wo['config']['user_limit']?>">
                                 
                             </div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr>
+
+                        <div class="float-left">
+                            <label for="reserved_usernames_system" class="main-label">Reserved usernames System</label>
+                            <br><small class="admin-info">Reserved usernames System</small>
+                        </div>
+                        <div class="form-group float-right switcher">
+                            <input type="hidden" name="reserved_usernames_system" value="0" />
+                            <input type="checkbox" name="reserved_usernames_system" id="chck-reserved_usernames_system" value="1" <?php echo ($wo['config']['reserved_usernames_system'] == '1') ? 'checked': '';?>>
+                            <label for="chck-reserved_usernames_system" class="check-trail"><span class="check-handler"></span></label>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <label class="form-label">Reserved usernames</label>
+                                <textarea name="reserved_usernames" class="form-control"><?php echo ($wo['config']['reserved_usernames']);?></textarea>
+                                <small class="admin-info">Reserved usernames</small>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr>
+                        <div class="float-left">
+                            <label for="disable_start_up" class="main-label">Disable start page</label>
+                            <br><small class="admin-info">Disable start up page</small>
+                        </div>
+                        <div class="form-group float-right switcher">
+                            <input type="hidden" name="disable_start_up" value="0" />
+                            <input type="checkbox" name="disable_start_up" id="chck-disable_start_up" value="1" <?php echo ($wo['config']['disable_start_up'] == '1') ? 'checked': '';?>>
+                            <label for="chck-disable_start_up" class="check-trail"><span class="check-handler"></span></label>
                         </div>
 
                         <!-- <div class="user-settings-alert"></div> -->
@@ -523,7 +584,7 @@ $(function() {
             }, 2000);
         });
     });
-    $('input[type=text], input[type=number]').on('input', delay(function() {
+    $('input[type=text], input[type=number] , textarea').on('input', delay(function() {
             clearTimeout(setTimeOutColor);
             var thisElement = $(this);
             var configName = thisElement.attr('name');

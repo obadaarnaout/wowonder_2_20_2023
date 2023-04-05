@@ -379,6 +379,16 @@ if ($f == 'job' && $wo['config']['job_system'] == 1) {
         echo json_encode($data);
         exit();
     }
+    if ($s == 'load_job') {
+        if (!empty($_POST['id'])) {
+            $wo['job']      = Wo_GetJobById($_POST['id']);
+            $data['html']   = '';
+            if (!empty($wo['job'])) {
+                $data['html']   = Wo_LoadPage("jobs/job_details");
+            }
+            $data['status'] = 200;
+        }
+    }
 }
 header("Content-type: application/json");
 echo json_encode($data);

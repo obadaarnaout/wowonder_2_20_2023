@@ -1,0 +1,93 @@
+<div class="modal fade" id="AI-credit-modal" role="dialog">
+	<div class="modal-dialog modal-md wow_mat_mdl">
+		<form method="post">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+					<h4 class="modal-title"><?php echo $wo['lang']['buy_credit']; ?></h4>
+				</div>
+				<div class="modal-body" style="padding:0;">
+					<div class="ai_credit_alert"></div>
+					<div class="ai_credit_prices"></div>
+					<div class="wow_form_fields">
+						<input type="text" placeholder="<?php echo $wo['lang']['amount']?>" onkeyup="checkCanBuy(this)" id="ai-credit-input">
+					</div>
+			    <input type="hidden" name="user" value="<?php echo $wo['user']['user_id'];?>">
+			    <input type="hidden" value="<?php echo $wo['user']['credits'];?>" id="current_user_credits">
+			    <input type="hidden" value="" id="current_model_credits">
+				</div>
+				<div class="modal-footer" style="border: none">
+					<div class="ball-pulse"><div></div><div></div><div></div></div>
+					<button type="button" class="btn main btn-mat" id="ai-credit-button" onclick="buyCredits()"><?php echo $wo['lang']['buy']; ?></button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function getAvailableByType(type = 'image'){
+		if (type == 'text') {
+			return parseInt(parseInt($('#current_user_credits').val()) / parseInt("<?php echo($wo['config']['generated_word_price']) ?>"));
+		}
+		return parseInt(parseInt($('#current_user_credits').val()) / parseInt("<?php echo($wo['config']['generated_image_price']) ?>"));
+	}
+	function buyCredits() {
+		$("#ai-credit-button").text("<?php echo($wo['lang']['please_wait']) ?>");
+		$("#ai-credit-button").attr("disabled",true);
+		$.post(Wo_Ajax_Requests_File()+'?f=wallet&s=buy_credit', {amount: $('#ai-credit-input').val()}, function(data, textStatus, xhr) {
+			if (data.status == 200) {
+				$('#current_user_credits').val(parseInt($('#current_user_credits').val()) + parseInt($('#ai-credit-input').val()));
+				$('#ai-credit-input').val('');
+				$('#AI-credit-modal').modal('hide');
+				if ($('#current_model_credits').val() == 'AI-post-modal') {
+					openPostModel();
+				}
+				else if($('#current_model_credits').val() == 'AI-user-modal'){
+					openAiUserModel($('#ai-user-model-type').val());
+				}
+				else if($('#current_model_credits').val() == 'AI-modal'){
+					openAIModel();
+				}
+				else if($('#current_model_credits').val() == 'AI-blog'){
+					refreshBlogInfo();
+				}
+			}
+			else{
+				$('.ai_credit_alert').html("<div class='alert alert-danger'>"+data.message+"</div>");
+			}
+			$("#ai-credit-button").text("<?php echo($wo['lang']['buy']) ?>");
+			$("#ai-credit-button").attr("disabled",true);
+		});
+	}
+	function checkCanBuy(self) {
+		$.post(Wo_Ajax_Requests_File()+'?f=wallet&s=check_credit', {amount: $(self).val()}, function(data, textStatus, xhr) {
+			if (data.status == 200) {
+				$("#ai-credit-button").removeAttr("disabled");
+				$('.ai_credit_alert').html("");
+			}
+			else{
+				$("#ai-credit-button").attr("disabled",true);
+				$('.ai_credit_alert').html("<div class='alert alert-danger'>"+data.message+"</div>");
+			}
+		});
+	}
+	function openAICredit(id) {
+		<?php if ($wo['user']['wallet'] < 1) { ?>
+			$('.ai_credit_alert').html("<div class='alert alert-danger'><a href='<?php echo $wo['config']['site_url'];?>/wallet'><?php echo $wo["lang"]["please_top_up_wallet"]?></a></div>");
+		<?php } ?>
+		var div = '<div class="alert alert-warning"><p>{TX}</p></div>';
+		if (id == 'AI-post-modal' || id == 'AI-blog') {
+			$('.ai_credit_prices').html(div.replace('{TX}',"<?php echo(str_replace('{price}', $wo['config']['generated_word_price'], $wo['lang']['text_price'])) ?>"));
+		}
+		else{
+			$('.ai_credit_prices').html(div.replace('{TX}',"<?php echo(str_replace('{price}', $wo['config']['generated_image_price'], $wo['lang']['image_price'])) ?>"));
+		}
+					
+		$('#current_model_credits').val(id);
+		$('#AI-post-modal').modal('hide');
+		$('#AI-user-modal').modal('hide');
+		$('#AI-modal').modal('hide');
+		$('#AI-credit-modal').modal('show');
+	}
+</script>

@@ -9,21 +9,41 @@ if ($f == 'confirm_user_unusal_login') {
             exit();
         }
     }
-    if (!empty($_POST['confirm_code']) && !empty($_SESSION['code_id'])) {
+    if (!empty($_POST['confirm_code']) && !empty($_COOKIE['two_factor_username'])) {
         $confirm_code = $_POST['confirm_code'];
-        $user_id      = $_SESSION['code_id'];
         if (empty($_POST['confirm_code'])) {
             $errors = $error_icon . $wo['lang']['please_check_details'];
-        } else if (empty($_SESSION['code_id'])) {
+        } else if (empty($_COOKIE['two_factor_username'])) {
             $errors = $error_icon . $wo['lang']['error_while_activating'];
         }
-        $confirm_code = $db->where('user_id', $user_id)->where('email_code', md5($confirm_code))->getValue(T_USERS, 'count(*)');
+        $user = $db->where("username", Wo_Secure($_COOKIE['two_factor_username']))->getOne(T_USERS);
+        if (empty($user)) {
+            $errors = $error_icon . $wo['lang']['error_while_activating'];
+        }
+        $user_id = $user->user_id;
+
+        $confirm_code = 0;
+        if ($user->two_factor_method == 'two_factor' && $user->email_code == md5($_POST['confirm_code'])) {
+            $confirm_code = 1;
+        }
+        else if ($user->two_factor_method == 'google' && !empty($user->google_secret)) {
+            require_once 'assets/libraries/google_auth/vendor/autoload.php';
+            $google2fa = new \PragmaRX\Google2FA\Google2FA();
+            if ($google2fa->verifyKey($user->google_secret, $_POST['confirm_code'])) {
+                $confirm_code = 1;
+            }
+        }
+        else if ($user->two_factor_method == 'authy' && !empty($user->authy_id) && verifyAuthy($_POST['confirm_code'],$user->authy_id)) {
+            $confirm_code = 1;
+        }
+
         if (empty($confirm_code)) {
             if ($wo['config']['prevent_system'] == 1) {
                 WoAddBadLoginLog();
             }
             $errors = $error_icon . $wo['lang']['wrong_confirmation_code'];
         }
+
         if (empty($errors) && $confirm_code > 0) {
             unset($_SESSION['code_id']);
             if (!empty($_SESSION['last_login_data'])) {

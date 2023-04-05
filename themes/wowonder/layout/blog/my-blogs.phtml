@@ -16,6 +16,9 @@
 							<li class="active"><a href="<?php echo Wo_SeoLink('index.php?link1=my-blogs'); ?>" data-ajax="?link1=my-blogs"><?php echo $wo['lang']['my_articles'] ?></a></li>
 							<li><a href="<?php echo Wo_SeoLink('index.php?link1=blogs'); ?>" data-ajax="?link1=blogs"><?php echo $wo['lang']['browse_articles'] ?></a></li>
 						</ul>
+						<?php if ($wo['config']['ai_blog_system'] == 1) { ?>
+						<a class="btn btn-main btn-mat btn-mat-raised" href="<?php echo Wo_SeoLink('index.php?link1=create-ai-blog');?>"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"></path></svg> <?php echo $wo['lang']['create_new_article_ai'] ?></a>
+						<?php } ?>
 						<a class="btn btn-main btn-mat btn-mat-raised" href="<?php echo Wo_SeoLink('index.php?link1=create-blog');?>"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"></path></svg> <?php echo $wo['lang']['create'] ?></a>
 					</div>
 				</div>

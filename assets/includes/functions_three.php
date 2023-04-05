@@ -3445,6 +3445,11 @@ function Wo_GetPastEvents($offset = 0, $limit = 10) {
     }
     return $data;
 }
+function eventExpired($id='')
+{
+    global $sqlConnect, $wo,$db;
+    return $db->where('id',$id)->where('end_date < CURDATE()')->getValue(T_EVENTS,'COUNT(*)');
+}
 function Wo_GetMyEvents($offset = 0, $limit = 10) {
     global $sqlConnect, $wo;
     if ($wo['loggedin'] == false) {
@@ -3531,6 +3536,7 @@ function Wo_EventData($id = false) {
             $fetched_data['user_data']       = Wo_UserData($fetched_data['poster_id']);
             $fetched_data['cover']           = Wo_GetMedia($fetched_data['cover']);
             $fetched_data['is_owner']        = Is_EventOwner($fetched_data['id']);
+            $fetched_data['user_id']        = $fetched_data['poster_id'];
             //$fetched_data['start_date'] = date($fetched_data['start_date']);
             $fetched_data['start_edit_date'] = date($fetched_data['start_date']);
             $fetched_data['start_date_js']   = date('m/d/y', strtotime($fetched_data['start_date'] . $fetched_data['start_time']));
@@ -6780,29 +6786,32 @@ function Wo_TwoFactor($username = '', $id_or_u = 'user') {
     if ($getuser['two_factor'] == 0 || $getuser['two_factor_verified'] == 0) {
         return true;
     }
-    $code        = rand(111111, 999999);
-    $hash_code   = md5($code);
-    $update_code = $db->where('user_id', $getuser['user_id'])->update(T_USERS, array(
-        'email_code' => $hash_code
-    ));
-    cache($getuser['user_id'], 'users', 'delete');
-    $message     = "Your confirmation code is: $code";
-    if (!empty($getuser['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone')) {
-        $send_message = Wo_SendSMSMessage($getuser['phone_number'], $message);
+    if ($getuser['two_factor_method'] == 'two_factor') {
+        $code        = rand(111111, 999999);
+        $hash_code   = md5($code);
+        $update_code = $db->where('user_id', $getuser['user_id'])->update(T_USERS, array(
+            'email_code' => $hash_code
+        ));
+        cache($getuser['user_id'], 'users', 'delete');
+        $message     = "Your confirmation code is: $code";
+        if (!empty($getuser['phone_number']) && ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'phone')) {
+            $send_message = Wo_SendSMSMessage($getuser['phone_number'], $message);
+        }
+        if ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'email') {
+            $send_message_data = array(
+                'from_email' => $wo['config']['siteEmail'],
+                'from_name' => $wo['config']['siteName'],
+                'to_email' => $getuser['email'],
+                'to_name' => $getuser['name'],
+                'subject' => 'Please verify that it’s you',
+                'charSet' => 'utf-8',
+                'message_body' => $message,
+                'is_html' => true
+            );
+            $send              = Wo_SendMessage($send_message_data);
+        }
     }
-    if ($wo['config']['two_factor_type'] == 'both' || $wo['config']['two_factor_type'] == 'email') {
-        $send_message_data = array(
-            'from_email' => $wo['config']['siteEmail'],
-            'from_name' => $wo['config']['siteName'],
-            'to_email' => $getuser['email'],
-            'to_name' => $getuser['name'],
-            'subject' => 'Please verify that it’s you',
-            'charSet' => 'utf-8',
-            'message_body' => $message,
-            'is_html' => true
-        );
-        $send              = Wo_SendMessage($send_message_data);
-    }
+        
     return false;
 }
 function Wo_VerfiyIP($username = '') {

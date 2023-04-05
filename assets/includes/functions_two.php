@@ -754,13 +754,21 @@ function Wa_GetTrendingHashs($type = "latest", $limit = 5) {
     return $data;
 }
 function Wo_GetHashtagPosts($s_query, $after_post_id = 0, $limit = 5, $before_post_id = 0) {
-    global $sqlConnect;
+    global $sqlConnect,$wo;
     $data         = array();
     $search_query = str_replace("#", "", Wo_Secure($s_query));
     $hashdata     = Wo_GetHashtag($search_query, false);
     if (is_array($hashdata) && count($hashdata) > 0) {
+        $qr = "";
+        if ($wo['loggedin'] == true) {
+            $logged_user_id = Wo_Secure($wo['user']['user_id']);
+            $qr = " AND `user_id` NOT IN (SELECT `blocked` FROM " . T_BLOCKS . " WHERE `blocker` = '{$logged_user_id}') ";
+        }
+        
         $search_string = "#[" . $hashdata["id"] . "]";
-        $query_one     = "SELECT id FROM " . T_POSTS . " WHERE `postText` LIKE '%{$search_string}%'";
+        $query_one     = "SELECT id FROM " . T_POSTS . " WHERE `postText` LIKE '%{$search_string}%' ".$qr;
+        // print_r($query_one);
+        // exit();
         if (isset($after_post_id) && !empty($after_post_id) && is_numeric($after_post_id)) {
             $after_post_id = Wo_Secure($after_post_id);
             $query_one .= " AND id < {$after_post_id}";
@@ -2761,6 +2769,9 @@ function Wo_GetGoingButton($event_id = 0) {
     if (Is_EventOwner($event_id, false, false)) {
         return false;
     }
+    if (eventExpired($event_id)) {
+        return false;
+    }
     $event_id = Wo_Secure($event_id);
     $event    = $wo["going"] = Wo_EventData($event_id);
     if (!isset($wo["going"]["id"])) {
@@ -3734,7 +3745,7 @@ function Wo_IsNameExist($username, $active = 0) {
         }
     }
     $query = mysqli_query($sqlConnect, "SELECT COUNT(`page_id`) as pages,`page_id` as id FROM " . T_PAGES . " WHERE `page_name` = '{$username}' {$active_text}");
-    if (mysqli_num_rows($query)) {
+    if ($query != false && mysqli_num_rows($query)) {
         $fetched_data = mysqli_fetch_assoc($query);
         if ($fetched_data["pages"] == 1) {
             return array(
@@ -5192,12 +5203,14 @@ function Wo_SendMessage($data = array()) {
         } else {
             return false;
         }
-        $mail->IsHTML($data["is_html"]);
+        $mail->IsHTML(true);
         $mail->setFrom($data["from_email"], $data["from_name"]);
         $mail->addAddress($data["to_email"], $data["to_name"]); // Add a recipient
         $mail->Subject = $data["subject"];
+        $mail->CharSet = "text/html; charset=UTF-8;";
         $mail->CharSet = $data["charSet"];
-        $mail->MsgHTML($data["message_body"]);
+        //$mail->MsgHTML($data["message_body"]);
+        $mail->Body = $data["message_body"];
         if (!empty($data["reply-to"])) {
             $mail->ClearReplyTos();
             $mail->AddReplyTo($data["reply-to"], $data["from_name"]);
@@ -5549,6 +5562,11 @@ function Wo_ReplenishWallet($sum) {
         return false;
     }
     include_once('assets/includes/paypal_config.php');
+
+    if (!empty($wo["config"]['currency_array']) && in_array($wo["config"]['paypal_currency'], $wo["config"]['currency_array']) && $wo["config"]['paypal_currency'] != $wo['config']['currency'] && !empty($wo['config']['exchange']) && !empty($wo['config']['exchange'][$wo["config"]['paypal_currency']])) {
+        $sum = (($sum * $wo['config']['exchange'][$wo["config"]['paypal_currency']]));
+        //$sum = round($sum, 2);
+    }
 
 
     $ch = curl_init();

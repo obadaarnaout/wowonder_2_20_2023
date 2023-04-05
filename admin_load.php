@@ -44,7 +44,7 @@ $page = 'dashboard';
 if (!empty($path['page']) && in_array($path['page'], $files) && file_exists('admin-panel/pages/' . $path['page'] . '/content.phtml')) {
     $page = $path['page'];
 }
-$wo['user']['permission'] = json_decode($wo['user']['permission'], true);
+$wo['user']['permission'] = !empty($wo['user']['permission']) ? json_decode($wo['user']['permission'], true) : [];
 if (!empty($wo['user']['permission'][$page])) {
   if (!empty($wo['user']['permission']) && $wo['user']['permission'][$page] == 0) {
       header("Location: " . Wo_SeoLink('index.php?link1=welcome'));

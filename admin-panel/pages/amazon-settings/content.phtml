@@ -179,6 +179,14 @@ if (!isEnabled('shell_exec')) {
                         </select>
                         <small class="admin-info">Set the max upload size a user can use for uploading files, videos, music and images.</small>
                         <div class="clearfix"></div>
+                        <label class="form-check-label" for="images_quality">Image Quality</label>
+                        <select class="form-control show-tick" id="images_quality" name="images_quality">
+                              <option value="90" <?php echo ($wo['config']['images_quality'] == 90)   ? ' selected': '';?>>Low</option>
+                              <option value="60" <?php echo ($wo['config']['images_quality'] == 60)   ? ' selected': '';?>>Medium</option>
+                              <option value="20" <?php echo ($wo['config']['images_quality'] == 20)   ? ' selected': '';?>>High</option>
+                        </select>
+                        <small class="admin-info">Set the upload images quality.</small>
+                        <div class="clearfix"></div>
                         <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
                     </form>
                 </div>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+ <url>
+  <loc>http://localhost/wowonder/post/6</loc>
+  <priority>0.8</priority>
+  <changefreq>daily</changefreq>
+  <lastmod>2023-02-20</lastmod>
+ </url>
+ <url>
+  <loc>http://localhost/wowonder/blog</loc>
+  <priority>0.6</priority>
+  <changefreq>daily</changefreq>
+  <lastmod>2023-02-20</lastmod>
+ </url>
+ <url>
+  <loc>http://localhost/wowonder/developers</loc>
+  <priority>0.1</priority>
+  <changefreq>yearly</changefreq>
+ </url>
+</urlset>

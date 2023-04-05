@@ -199,10 +199,10 @@ else{
 } 
 if (!empty($_GET['user_type']) && in_array($_GET['user_type'], array('active','inactive','online','offline'))) {
     if ($_GET['user_type'] == 'active') {
-        $db->where('active',1);
+        $db->where('active','1');
     }
     elseif ($_GET['user_type'] == 'inactive') {
-        $db->where('active',0);
+        $db->where('active','0');
     }
     elseif ($_GET['user_type'] == 'online') {
         $db->where('lastseen',time() - 60,'>');

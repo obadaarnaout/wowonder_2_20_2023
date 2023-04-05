@@ -432,7 +432,7 @@ function Wo_intervalUpdates(force_update = 0, loop = 0) {
           Wo_NotifyMe(data.icon, decodeHtml(data.title), decodeHtml(data.notification_text), data.url);
         }
         if(data.notifications != current_notification_number) {
-          if (data.notifications_sound == 0 && current_notification_number) {
+          if (data.notifications_sound == 0) {
             document.getElementById('notification-sound').play();
           }
           current_notification_number = data.notifications;

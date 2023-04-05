@@ -44,6 +44,10 @@ if ($f == 'wallet') {
             if (!empty($result)) {
                 $result = json_decode($result);
                 if (!empty($result->status) && $result->status == 'COMPLETED') {
+                    if (!empty($wo["config"]['currency_array']) && in_array($wo["config"]['paypal_currency'], $wo["config"]['currency_array']) && $wo["config"]['paypal_currency'] != $wo['config']['currency'] && !empty($wo['config']['exchange']) && !empty($wo['config']['exchange'][$wo["config"]['paypal_currency']])) {
+                        $_GET['amount'] = (($_GET['amount'] / $wo['config']['exchange'][$wo["config"]['paypal_currency']]));
+                        //$sum = round($sum, 2);
+                    }
                     if (Wo_ReplenishingUserBalance($_GET['amount'])) {
                         $_GET['amount']                 = Wo_Secure($_GET['amount']);
                         $create_payment_log             = mysqli_query($sqlConnect, "INSERT INTO " . T_PAYMENT_TRANSACTIONS . " (`userid`, `kind`, `amount`, `notes`) VALUES ('" . $wo['user']['id'] . "', 'WALLET', '" . $_GET['amount'] . "', 'PayPal')");
@@ -355,6 +359,52 @@ if ($f == 'wallet') {
         $data = array(
             'status' => 200
         );
+        header("Content-type: application/json");
+        echo json_encode($data);
+        exit();
+    }
+    if ($s == 'check_credit' && $wo['loggedin'] === true) {
+        $data['status'] = 400;
+        if (!empty($_POST['amount'])) {
+            if (($_POST['amount'] / $wo['config']['credit_price']) > $wo['user']['wallet']) {
+                $data['message'] = $wo['lang']['not_enough_wallet_to_credits'];
+            }
+            else{
+                $data['status'] = 200;
+            }
+        }
+        else{
+            $data['message'] = $wo['lang']['please_check_details'];
+        }
+        header("Content-type: application/json");
+        echo json_encode($data);
+        exit();
+    }
+    if ($s == 'buy_credit' && $wo['loggedin'] === true) {
+        $data['status'] = 400;
+        if (!empty($_POST['amount'])) {
+            if (($_POST['amount'] / $wo['config']['credit_price']) > $wo['user']['wallet']) {
+                $data['message'] = $wo['lang']['not_enough_wallet_to_credits'];
+            }
+            else{
+                $amount = Wo_Secure($_POST['amount']);
+                $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
+                    'wallet' => $db->dec(($amount / $wo['config']['credit_price'])),
+                    'credits' => $db->inc($amount)
+                ]);
+                $data['status'] = 200;
+            }
+        }
+        else{
+            $data['message'] = $wo['lang']['please_check_details'];
+        }
+        header("Content-type: application/json");
+        echo json_encode($data);
+        exit();
+    }
+    if ($s == 'get_credits' && $wo['loggedin'] === true) {
+        $data['status'] = 200;
+        $data['credits'] = $wo['user']['credits'];
         header("Content-type: application/json");
         echo json_encode($data);
         exit();

@@ -815,7 +815,7 @@ function Wo_CropAvatarImage($file = '', $data = array()) {
     );
     $dest          = imagecrop($src, $to_crop_array);
     imagejpeg($dest, $file, 100);
-    Wo_Resize_Crop_Image($wo['profile_picture_width_crop'], $wo['profile_picture_height_crop'], $file, $file, 80);
+    Wo_Resize_Crop_Image($wo['profile_picture_width_crop'], $wo['profile_picture_height_crop'], $file, $file, $wo['config']['images_quality']);
     $s3 = Wo_UploadToS3($file);
     return true;
 }
@@ -1094,7 +1094,7 @@ function Wo_MaxFileUpload() {
     // return the smallest of them, this defines the real limit
     return min($max_upload, $max_post, $memory_limit);
 }
-function Wo_CompressImage($source_url, $destination_url, $quality) {
+function Wo_CompressImage($source_url, $destination_url, $quality = 50) {
     $imgsize = getimagesize($source_url);
     $finfof  = $imgsize['mime'];
     $image_c = 'imagejpeg';
@@ -1109,7 +1109,6 @@ function Wo_CompressImage($source_url, $destination_url, $quality) {
     } else {
         $image = @imagecreatefromjpeg($source_url);
     }
-    $quality = 50;
     if (function_exists('exif_read_data')) {
         $exif = @exif_read_data($source_url);
         if (!empty($exif['Orientation'])) {
@@ -1366,14 +1365,17 @@ function ip_in_range($ip, $range) {
     return (($ip_decimal & $netmask_decimal) == ($range_decimal & $netmask_decimal));
 }
 function br2nl($st) {
-    $breaks   = array(
-        "\r\n",
-        "\r",
-        "\n"
-    );
-    $st       = str_replace($breaks, "", $st);
-    $st_no_lb = preg_replace("/\r|\n/", "", $st);
-    return preg_replace('/<br(\s+)?\/?>/i', "\r", $st_no_lb);
+    if (!empty($st)) {
+        $breaks   = array(
+            "\r\n",
+            "\r",
+            "\n"
+        );
+        $st       = str_replace($breaks, "", $st);
+        $st_no_lb = preg_replace("/\r|\n/", "", $st);
+        return preg_replace('/<br(\s+)?\/?>/i', "\r", $st_no_lb);
+    }
+    return $st;
 }
 function br2nlf($st) {
     $breaks   = array(
@@ -1814,7 +1816,7 @@ function Wo_CanBlog() {
         }
         return false;
     }
-    return true;
+    return false;
 }
 function shuffle_assoc($list) {
     if (!is_array($list))

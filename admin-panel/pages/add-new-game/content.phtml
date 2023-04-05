@@ -36,7 +36,7 @@ if (isset($_POST['game'])) {
             $game_name = Wo_Secure($match[3]);
           }
         }
-        elseif (preg_match('#([A-Za-z0-9_-]+)://([A-Za-z0-9_-]+).freeonlinegames.com/embed/([A-Za-z0-9_-]+)#s', $_POST['game'], $match)) {
+        elseif (preg_match('#([A-Za-z0-9_-]+)://([A-Za-z0-9_-]+).freeonlinegames.com/game/([A-Za-z0-9_-]+)#s', $_POST['game'], $match)) {
           $upload = true;
           $game_link = Wo_Secure($_POST['game']);
           if (!empty($_POST['name'])) {
@@ -46,16 +46,16 @@ if (isset($_POST['game'])) {
             $game_name = Wo_Secure($match[3]);
           }
         }
-        elseif (preg_match('/([A-Za-z0-9_-]+):\/\/zone.msn.com\/gameplayer\/gameplayerHTML.aspx(.*)game=([A-Za-z0-9_-]+)/m', $_POST['game'], $match)) {
-          $upload = true;
-          $game_link = Wo_Secure($_POST['game']);
-          if (!empty($_POST['name'])) {
-            $game_name = Wo_Secure($_POST['name']);
-          }
-          else{
-            $game_name = Wo_Secure($match[3]);
-          }
-        }
+        // elseif (preg_match('/([A-Za-z0-9_-]+):\/\/zone.msn.com\/gameplayer\/gameplayerHTML.aspx(.*)game=([A-Za-z0-9_-]+)/m', $_POST['game'], $match)) {
+        //   $upload = true;
+        //   $game_link = Wo_Secure($_POST['game']);
+        //   if (!empty($_POST['name'])) {
+        //     $game_name = Wo_Secure($_POST['name']);
+        //   }
+        //   else{
+        //     $game_name = Wo_Secure($match[3]);
+        //   }
+        // }
 
         if ($upload == true) {
           $img = $wo['config']['site_url'].'/upload/photos/game-icon.png';
@@ -112,12 +112,13 @@ if (!empty($_GET['delete_ip'])) {
             <div class="card">
                 <div class="card-body">
                   <h6 class="card-title">Add New Game</h6>
-                  <div class="alert alert-info">Supported from (miniclip.com , y8.com , freeonlinegames.com , zone.msn.com) </div>
+                  <div class="alert alert-info">Supported from (miniclip.com , y8.com , freeonlinegames.com) </div>
                    <div class="alert alert-dark"><h5>Supported Sites Links</h5>
                     MiniClip <small>https://www.miniclip.com/games/8-ball-pool-multiplayer/en/</small></br>
                     Y8 <small>https://www.y8.com/games/penalty_shooters_2</small></br>
                     Free Online Games <small>http://www.freeonlinegames.com/embed/125874</small></br>
-                    MSN <small>https://zone.msn.com/gameplayer/gameplayerHTML.aspx?game=bubbletown&instance=default</small></p> </div>
+                    <!-- MSN <small>https://zone.msn.com/gameplayer/gameplayerHTML.aspx?game=bubbletown&instance=default</small></p>  -->
+                  </div>
                   
                     
                       <?php if (!empty($error)) { ?>

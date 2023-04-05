@@ -1137,6 +1137,7 @@ function Wo_GetGroupMessages(group_id, group_name) {
     group_id: group_id
   }, function (data) {
     if(data.status == 200) {
+    	$('#user-avatar-right img').attr('src', $('#messages-group-'+group_id).find('img').attr('src')).removeClass('hidden');
     	$('.delete-icon').html('<svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 24 24" onclick="'+data.onclick+'(' + group_id + ')"><path fill="currentColor" d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>');
     	$('.send-button').css('background-color', '#c45a5b');
         $('.send-button').css('border-color', '#c45a5b');

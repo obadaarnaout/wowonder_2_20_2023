@@ -242,7 +242,64 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {-webkit-appe
     </div>
 </div>
 <?php } ?>
+<?php if ($wo['config']['braintree_payment'] == 1) { ?>
+<div class="modal fade" id="braintree_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md wow_mat_mdl" role="document">
+        <div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+				<h4 class="modal-title"><?php echo $wo['lang']['braintree']; ?></h4>
+			</div>
+			<form id="braintree_form" method="post">
+				<div class="modal-body">
+                	<div id="braintree_alert" style="color: red;"></div>
+                    <div id="braintree_content"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-main btn-mat" id="braintree_button"><?php echo $wo['lang']['pay']; ?></button>
+				</div>
+			</form>
+        </div>
+    </div>
+</div>
+<?php } ?>
 <script>
+	<?php if ($wo['config']['braintree_payment'] == 1) { ?>
+	function braintreeCheckout(payload) {
+		$('#braintree_button').attr('disabled', true).text("<?php echo $wo["lang"]["please_wait"]?>");
+		amount = $("#amount").val();
+		$.post(Wo_Ajax_Requests_File() + '?f=braintree&s=checkout',{amount:amount,nonce:payload.nonce}, function (data) {
+			if (data.status == 200) {
+	        	location.href = data.url;
+	        }
+	        else{
+	        	$('.pay-go-pro-alert').html("<div class='alert alert-danger'>"+data.message+"</div>");
+				setTimeout(function () {
+					$('.pay-go-pro-alert').html("");
+				},3000);
+	        }
+	        $('#braintree_button').removeAttr('disabled');
+	        $('#braintree_button').text("<?php echo($wo['lang']['pay']) ?>");
+		});
+	}
+	function pay_using_braintree() {
+		$('#pay-go-pro').modal('hide');
+		$('#braintree_modal').modal({
+             show: true
+            });
+
+		braintree.dropin.create({
+		  authorization: "<?php echo $wo['config']['braintree_token']; ?>",
+		  selector: '#braintree_content'
+		}, function (err, instance) {
+			$('#braintree_button').on('click',() => {
+				instance.requestPaymentMethod(function (err, payload) {
+			      braintreeCheckout(payload);
+			    });
+			});
+		});
+	}
+	<?php } ?>
 <?php if ($wo['config']['ngenius_payment'] == '1') { ?>
 	function pay_using_ngenius() {
 		amount = $("#amount").val();

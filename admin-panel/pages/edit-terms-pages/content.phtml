@@ -1,4 +1,4 @@
-<script src="<?php echo $wo['config']['theme_url'];?>/javascript/tinymce/js/tinymce/tinymce.min.js"></script>
+<script src="<?php echo Wo_LoadAdminLink('vendors/tinymce/js/tinymce/tinymce.min.js'); ?>"></script>
 <?php 
 if (empty($_GET['type']) || !in_array($_GET['type'], array('terms_of_use_page','privacy_policy_page','about_page','refund_terms_page'))) {
     header("Location: " . Wo_SeoLink('index.php?link1=admin-cp'));
@@ -56,20 +56,16 @@ $(function() {
     <?php 
     foreach ($page as $key => $value) {
         if (!in_array($key, array('id','lang_key','type'))  ) { ?>
-    tinymce.init({
-          selector: '#<?php echo($key); ?>',
-          height: 270,
-          entity_encoding : "raw",
-          paste_data_images: true,
-          image_advtab: true,
-          toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-          toolbar2: "print preview media | forecolor backcolor",
-          plugins: [
-              "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-              "searchreplace wordcount visualblocks visualchars code fullscreen",
-              "insertdatetime media nonbreaking save table contextmenu directionality",
-              "template paste textcolor colorpicker textpattern"
-            ],
+            tinymce.init({
+      selector: '#<?php echo($key); ?>',
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
+      mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+      ]
     });
     <?php } }  ?>
     var form_add_settings = $('form.add-settings');
@@ -79,11 +75,15 @@ $(function() {
             form_add_settings.find('.waves-effect').text('Please wait..');
         },
         beforeSubmit : function(arr, $form, options){
-            for (var i = 0; i < arr.length; i++) {
-                if (arr[i].name != "hash_id" && arr[i].name != "lang_key") {
-                    arr[i].value = btoa(unescape(encodeURIComponent($("#"+arr[i].name).value=tinymce.editors[$("#"+arr[i].name).attr('id')].getContent())));
-                }
-            }
+            // for (var i = 0; i < arr.length; i++) {
+            //     if (arr[i].name != "hash_id" && arr[i].name != "lang_key") {
+            //         for (var b = 0; b < $('textarea').length; b++) {
+            //             if (tinymce.get(b) != null) {
+            //                 arr[i].value = tinymce.get(b).selection.getContent();
+            //             }
+            //         }
+            //     }
+            // }
         },
         success: function(data) {
             if (data.status == 200) {

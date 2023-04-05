@@ -589,7 +589,7 @@
         if ($wo['config']['live_video'] == 1 && !empty($wo['story']['stream_name'])) { ?>
       <div class="post-file" <?php echo $wo['story']['is_still_live'] ? 'style="/*height: 440px;*/"' : ''; ?> id="fullsizeimg">
         <?php if ($wo['story']['is_still_live']) { ?>
-          <div class="embed-responsive embed-responsive-4by3">
+          <div class="embed-responsive embed-responsive-4by3" id="post_live_video_<?php echo($current_post['id']) ?>">
             <iframe src="https://viewer.millicast.com/v2?streamId=<?php echo($wo['config']['live_account_id']) ?>/<?php echo($wo['story']['stream_name']) ?>" class="embed-responsive-item"></iframe>
             <div class="wow_liv_counter"><span id="live_word_<?php echo($wo['story']['id']) ?>"><?php echo $wo['lang']['live']; ?></span> <span id="live_count_<?php echo($wo['story']['id']) ?>"> <?php echo $wo['story']['live_sub_users']; ?></span></div>
           </div>

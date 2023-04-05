@@ -721,10 +721,17 @@ if ($f == 'posts') {
                             $blur = 1;
                         } elseif ($wo['config']['adult_images'] == 1 && detect_safe_search($image_file) == false && $wo['config']['adult_images_action'] == 0) {
                             $errors = $wo['lang']['adult_image_file'];
-                            $errors[]     = $error_icon . $wo['lang']['adult_image_file'];
+                            $errors     = $wo['lang']['adult_image_file'];
                             Wo_DeletePost($id);
                             @unlink($file['filename']);
                             Wo_DeleteFromToS3($file['filename']);
+                            header("Content-type: application/json");
+                            echo json_encode(array(
+                                'status' => 400,
+                                'errors' => $errors,
+                                'invalid_file' => $invalid_file
+                            ));
+                            exit();
                         }
                         if (!empty($file)) {
                             $media_album                   = Wo_RegisterAlbumMedia($id, $file['filename']);
@@ -1177,6 +1184,7 @@ if ($f == 'posts') {
                                         $post_data['postFile']         = $file['filename'];
                                         $post_data['postFileName']     = $file['name'];
                                         $post_data['active']           = 1;
+                                        $post_data['postPrivacy']      = 0;
                                         $post_data['time']             = time();
                                         $new_id                        = Wo_RegisterPost($post_data);
                                         $media_album                   = Wo_RegisterAlbumMedia($post_id, $file['filename']);

@@ -4,7 +4,7 @@ if ($f == 'live') {
         if (empty($_POST['stream_name'])) {
             $data['message'] = $error_icon . $wo['lang']['please_check_details'];
         } else {
-            $postPrivacy   = 0;
+            $postPrivacy   = '0';
             $privacy_array = array(
                 '0',
                 '1',

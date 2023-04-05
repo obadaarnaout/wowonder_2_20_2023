@@ -43,7 +43,7 @@ if ($wo['loggedin'] == true) {
 if (!empty($_GET)) {
     foreach ($_GET as $key => $value) {
         if (!is_array($value)) {
-            $value      = preg_replace('/on[^<>=]+=[^<>]*/m', '', $value);
+            $value      = ($key != 'last_url') ? preg_replace('/on[^<>=]+=[^<>]*/m', '', $value) : $value;
             $value      = preg_replace('/\((.*?)\)/m', '', $value);
             $_GET[$key] = strip_tags($value);
         }
@@ -110,14 +110,18 @@ if ($page != 'admincp' && $page != 'admin-cp') {
     }
 }
 $wo['lang_attr'] = 'en';
+$wo['lang_dir'] = 'ltr';
 $wo['lang_og_meta'] = '';
+
 if (!empty($wo["language"]) && !empty($wo['iso']) && in_array($wo["language"], array_keys($wo['iso'])) && !empty($wo['iso'][$wo["language"]])) {
-    $wo['lang_attr'] = $wo['iso'][$wo["language"]];
+    $wo['lang_attr'] = $wo['iso'][$wo["language"]]->iso;
+    $wo['lang_dir'] = $wo['iso'][$wo["language"]]->direction;
+    $wo['language_type'] = $wo['iso'][$wo["language"]]->direction;
 }
 foreach ($all_langs as $key => $value) {
     $iso = '';
     if (!empty($wo['iso'][$value])) {
-        $iso = $wo['iso'][$value];
+        $iso = $wo['iso'][$value]->iso;
     }
     $wo['lang_og_meta'] .= '<link rel="alternate" href="'.$wo['config']['site_url'].'?lang='.$value.'" hreflang="'.$iso.'" />';
 }
@@ -299,6 +303,9 @@ if ((!$wo['loggedin'] || ($wo['loggedin'] && $wo['user']['banned'] != 1))) {
                         break;
                     case 'create-blog':
                         include('sources/create_blog.php');
+                        break;
+                    case 'create-ai-blog':
+                        include('sources/create-ai-blog.php');
                         break;
                     case 'read-blog':
                         include('sources/read_blog.php');
@@ -868,6 +875,9 @@ if ((!$wo['loggedin'] || ($wo['loggedin'] && $wo['user']['banned'] != 1))) {
                 break;
             case 'create-blog':
                 include('sources/create_blog.php');
+                break;
+            case 'create-ai-blog':
+                include('sources/create-ai-blog.php');
                 break;
             case 'read-blog':
                 include('sources/read_blog.php');
