@@ -48,7 +48,20 @@
 								</div>
 							</div>
 						</div>
-						<div class="clearfix"></div><br><br>
+						<div class="clearfix"></div><br>
+                        <div class="btn-file d-flex align-items-center">
+                            <input type="file" id="night_logo" accept="image/x-png, image/gif, image/jpeg" name="night_logo" class="hidden">
+                            <div class="mr-3 change-file-ico">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"></path></svg>
+                            </div>
+                            <div>
+                                <b>Sunshine Night Mode Logo (470x75)</b>
+                                <div class="mt-1 hidden" id="logo-s">
+                                    <input type="text" class="change-file-input" readonly="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div><br><br>
                         <h5>Header</h5><hr>
 						<div class="alert alert-info">
 						This system is only supported for the default theme and Wondertag theme, for sunshine you can edit the colors through CSS files:
@@ -177,6 +190,11 @@ $(function() {
          var filename = $(this).val().replace(/C:\\fakepath\\/i, '');
          $("#logo-i input").val(filename);
          $("#logo-i").removeClass('hidden');
+    });
+    $("#night_logo").change(function () {
+         var filename = $(this).val().replace(/C:\\fakepath\\/i, '');
+         $("#logo-s input").val(filename);
+         $("#logo-s").removeClass('hidden');
     });
     var form_d_settings = $('form.d-settings');
     form_d_settings.ajaxForm({

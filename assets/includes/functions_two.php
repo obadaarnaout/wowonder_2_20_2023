@@ -6763,7 +6763,7 @@ function Wo_GetReactionsTypes($type = "page") {
     $reactions = mysqli_query($sqlConnect, "SELECT * FROM " . T_REACTIONS_TYPES);
     if (!empty($reactions)) {
         while ($fetched_data = mysqli_fetch_assoc($reactions)) {
-            $fetched_data["name"] = $wo["lang"][$fetched_data["name"]];
+            $fetched_data["name"] = str_replace('&#39;', "'", $wo["lang"][$fetched_data["name"]]);
             if ($type == "page") {
                 if (!empty($fetched_data["wowonder_icon"])) {
                     $fetched_data["wowonder_icon"] = $fetched_data["wowonder_small_icon"] = Wo_GetMedia($fetched_data["wowonder_icon"]);

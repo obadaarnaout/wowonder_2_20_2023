@@ -11,4 +11,4 @@ $wo['description'] = $wo['config']['siteDesc'];
 $wo['keywords']    = $wo['config']['siteKeywords'];
 $wo['page']        = 'create-ai-blog';
 $wo['title']       = $wo['lang']['create_new_article'];
-$wo['content']     = Wo_LoadPage('blog/create-ai-blog');
+$wo['content']     = Wo_LoadPage('blog/create-blog');

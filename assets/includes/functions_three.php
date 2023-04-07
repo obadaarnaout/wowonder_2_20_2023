@@ -6775,7 +6775,7 @@ function Wo_TwoFactor($username = '', $id_or_u = 'user') {
     if (empty($username)) {
         return true;
     }
-    if ($wo['config']['two_factor'] == 0) {
+    if ($wo['config']['two_factor'] == 0 && $wo['config']['google_authenticator'] == 0 && $wo['config']['authy_settings'] == 0) {
         return true;
     }
     if ($id_or_u == 'id') {

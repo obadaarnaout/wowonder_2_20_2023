@@ -86,7 +86,7 @@
                         <label class="form-check-label" for="images_ai">which AI to use for images</label>
                         <select class="form-control show-tick" id="images_ai" name="images_ai">
                               <option value="openai"    <?php echo ($wo['config']['images_ai'] == 'openai')   ? ' selected': '';?>>OpenAI</option>
-                              <option value="midjeourny"    <?php echo ($wo['config']['images_ai'] == 'midjeourny')   ? ' selected': '';?>>MidJeourny</option>
+                              <option value="midjeourny"    <?php echo ($wo['config']['images_ai'] == 'midjeourny')   ? ' selected': '';?>>Replicate</option>
                         </select>
                         <div class="clearfix"></div>
                         <hr>
@@ -133,7 +133,7 @@
                         <label class="form-check-label" for="post_ai">which AI to use for posts</label>
                         <select class="form-control show-tick" id="post_ai" name="post_ai">
                               <option value="openai"    <?php echo ($wo['config']['post_ai'] == 'openai')   ? ' selected': '';?>>OpenAI</option>
-                              <option value="openai" disabled>MidJeourny (this feature is not supported by MidJeourny)</option>
+                              <option value="openai" disabled>Replicate (this feature is not supported by Replicate)</option>
                         </select>
                         <div class="clearfix"></div>
                         <hr>
@@ -180,7 +180,7 @@
                         <label class="form-check-label" for="blog_ai">which AI to use for blogs</label>
                         <select class="form-control show-tick" id="blog_ai" name="blog_ai">
                               <option value="openai"    <?php echo ($wo['config']['blog_ai'] == 'openai')   ? ' selected': '';?>>OpenAI</option>
-                              <option value="openai" disabled>MidJeourny (this feature is not supported by MidJeourny)</option>
+                              <option value="openai" disabled>Replicate (this feature is not supported by Replicate)</option>
                         </select>
                         <div class="clearfix"></div>
                         <hr>
@@ -227,7 +227,7 @@
                         <label class="form-check-label" for="user_ai">which AI to use for avatar/cover</label>
                         <select class="form-control show-tick" id="user_ai" name="user_ai">
                               <option value="midjeourny" disabled>OpenAI (this feature is not supported by OpenAI)</option>
-                              <option value="midjeourny"    <?php echo ($wo['config']['user_ai'] == 'midjeourny')   ? ' selected': '';?>>MidJeourny</option>
+                              <option value="midjeourny"    <?php echo ($wo['config']['user_ai'] == 'midjeourny')   ? ' selected': '';?>>Replicate</option>
                         </select>
                         <div class="clearfix"></div>
                         <hr>
@@ -247,14 +247,13 @@
                     <form class="email-settings" method="POST">
                         <div class="form-group form-float">
                             <div class="form-line">
-                                <label class="form-label">Replicate API Token</label>
-                                <input type="text" id="replicate_token" name="replicate_token" class="form-control" value="<?php echo $wo['config']['replicate_token']?>">
-                                <small class="admin-info">Replicate API Token</small>
+                                <label class="form-label">num_inference_steps</label>
+                                <input type="text" id="num_inference_steps" name="num_inference_steps" class="form-control" value="<?php echo $wo['config']['num_inference_steps']?>">
+                                <small class="admin-info">Number of denoising steps (minimum: 1; maximum: 500)</small>
                             </div>
                         </div>
                         <div class="clearfix"></div>
                         <hr>
-
 
                         <label class="form-check-label" for="midjeourny_model">Replicate Model</label>
                         <select class="form-control show-tick" id="midjeourny_model" name="midjeourny_model">
@@ -266,13 +265,14 @@
                         <hr>
                         <div class="form-group form-float">
                             <div class="form-line">
-                                <label class="form-label">num_inference_steps</label>
-                                <input type="text" id="num_inference_steps" name="num_inference_steps" class="form-control" value="<?php echo $wo['config']['num_inference_steps']?>">
-                                <small class="admin-info">Number of denoising steps (minimum: 1; maximum: 500)</small>
+                                <label class="form-label">Replicate API Token</label>
+                                <input type="text" id="replicate_token" name="replicate_token" class="form-control" value="<?php echo $wo['config']['replicate_token']?>">
+                                <small class="admin-info">Replicate API Token</small>
                             </div>
                         </div>
                         <div class="clearfix"></div>
                         <hr>
+                        
                         <div class="form-group form-float">
                             <div class="form-line">
                                 <label class="form-label">guidance_scale</label>

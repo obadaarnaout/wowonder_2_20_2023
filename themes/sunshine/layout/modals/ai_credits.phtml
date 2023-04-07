@@ -49,7 +49,7 @@
 				else if($('#current_model_credits').val() == 'AI-modal'){
 					openAIModel();
 				}
-				else if($('#current_model_credits').val() == 'AI-blog'){
+				else if($('#current_model_credits').val() == 'AI-blog-modal'){
 					refreshBlogInfo();
 				}
 			}
@@ -73,6 +73,8 @@
 		});
 	}
 	function openAICredit(id) {
+		$('#ai-credit-input').val('');
+		$('#ai_credit_alert').html('');
 		<?php if ($wo['user']['wallet'] < 1) { ?>
 			$('.ai_credit_alert').html("<div class='alert alert-danger'><a href='<?php echo $wo['config']['site_url'];?>/wallet'><?php echo $wo["lang"]["please_top_up_wallet"]?></a></div>");
 		<?php } ?>
@@ -88,6 +90,7 @@
 		$('#AI-post-modal').modal('hide');
 		$('#AI-user-modal').modal('hide');
 		$('#AI-modal').modal('hide');
+		$('#AI-blog-modal').modal('hide');
 		$('#AI-credit-modal').modal('show');
 	}
 </script>

@@ -291,6 +291,8 @@ $wo["footer_pages"]       = array(
     "orders",
     "order",
     "checkout",
+    "page_setting",
+    "group_setting",
 );
 $wo["css_file_header"]    = "
 <style>

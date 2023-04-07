@@ -1,0 +1,117 @@
+<div class="modal fade" id="AI-blog-modal" role="dialog">
+	<div class="modal-dialog modal-md wow_mat_mdl">
+		<form method="post">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button>
+					<h4 class="modal-title"><?php echo $wo['lang']['create_new_article_ai']; ?></h4>
+				</div>
+				<div class="modal-body" style="padding:0;">
+					<div class="ai_generate_blog_alert"></div>
+					<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+					<div class="alert alert-warning">
+						<p class="creditTB"><?php echo(str_replace('{credit}', getAvailableWordBalance(), $wo['lang']['available_words_credits'])) ?></p>
+					</div>
+					<?php } ?>
+					<div class="wow_form_fields">
+						<textarea dir="auto" rows="5" name="text" id="aiBlogText" placeholder="<?php echo $wo['lang']['describe_article']; ?>"></textarea>
+					</div>
+					<div class="wow_form_fields">
+						<input type="number" name="count" max="<?php echo($wo['config']['maxCharacters']); ?>" placeholder="<?php echo $wo['lang']['max_result_length']; ?>" id="aiBlogCount" oninput="checkMaxAllowedPostWords(this)">
+					</div>
+					<div class="wow_form_fields">
+						<div class="round-check">
+							<input type="checkbox" id="ai_thumbnail" name="ai_thumbnail">
+							<label for="ai_thumbnail"><?php echo $wo['lang']['generate_thumbnail']; ?></label>
+						</div>
+					</div>
+			    <input type="hidden" name="user" value="<?php echo $wo['user']['user_id'];?>">
+				</div>
+				<div class="modal-footer" style="border: none">
+					<div class="ball-pulse"><div></div><div></div><div></div></div>
+					<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+					<button type="button" class="btn main btn-mat" id="buy-ai-image-button" onclick="openAICredit('AI-blog-modal')"><?php echo $wo['lang']['buy_credit']; ?></button>
+					<?php } ?>
+					<button type="button" class="btn main btn-mat" id="ai-generate-blog-button" onclick="generateBlog(this)"><?php echo $wo['lang']['generate']; ?></button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<script type="text/javascript">
+	function refreshBlogInfo() {
+		console.log('fdsfsdfds')
+		
+		var text = "<?php echo($wo['lang']['available_words_credits']); ?>";
+		console.log(text.replace("{credit}", getAvailableByType('text')))
+		$('.creditTB').text(text.replace("{credit}", getAvailableByType('text')));
+		$('#aiBlogCount').attr('max',getAvailableByType('text'));
+		$('#aiBlogCount').val(getAvailableByType('text'));
+	}
+	function checkMaxAllowedBlogWords(self) {
+		let max = 10000;
+		<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+			let paid = parseInt(parseInt($('#current_user_credits').val()) / parseInt("<?php echo($wo['config']['generated_word_price']) ?>"));
+			if (paid < max) {
+				max = paid;
+			}
+		<?php } ?>
+
+		if (parseInt($(self).val()) > max) {
+			$(self).val(max);
+			$(self).attr('max',max);
+		}
+	}
+	function openAIBlog() {
+		$('#AI-blog-modal').modal('show');
+		$('#aiBlogText').val('');
+		$('#aiBlogCount').val('');
+	}
+	function generateBlog(self) {
+		$(self).text("<?php echo($wo['lang']['please_wait']) ?>");
+		$(self).attr('disabled',true);
+		tumbnail = 'off';
+        if ($('#ai_thumbnail').is(":checked") === true) {
+            tumbnail = 'on';
+        }
+		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=generateBlog', {text: $('#aiBlogText').val(),count: $('#aiBlogCount').val(),tumbnail:tumbnail}, function(data, textStatus, xhr) {
+			$(self).text("<?php echo $wo['lang']['generate']; ?>");
+			$(self).removeAttr('disabled');
+			if (data.status == 200) {
+				$('#AI-blog-modal').modal('hide');
+				<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+					$('#current_user_credits').val(data.credits);
+					var text = "<?php echo($wo['lang']['available_words_credits']); ?>";
+					$('.creditTB').text(text.replace("{credit}", getAvailableByType('text')));
+					$('#aiBlogCount').attr('max',getAvailableByType('text'));
+					$('#aiBlogCount').val(getAvailableByType('text'));
+				<?php } ?>
+				$('#blog_title').val(data.title);
+				$('#new-blog-desc').val(data.description);
+				$('#blog').val(data.content);
+				tinymce.get('blog').setContent(data.content);
+				if (data.output && data.output.length > 0) {
+					let images = getConvertedImages(data.output);
+				}
+			}
+			else{
+				$('.ai_generate_blog_alert').html('<div class="alert alert-danger">' + data.message + '</div>');
+		    	setTimeout(() => {
+			  		$('.ai_generate_blog_alert').html('');
+			  	},3000);
+			}
+		});
+	}
+
+	function getConvertedImages(output) {
+		let outputImages = [];
+		var ii = 0;
+		for (var i = 0; i < output.length; i++) {
+			dataUrl = output[i];
+		    var fileData = imageDataToFile(dataUrl, "Ai_image_"+ii+".jpg");
+		    outputImages.push(fileData);
+		    $("#thumbnail").prop('files', outputImages);
+          	$("#wow_fcov_img_holder").html("<img src='" + dataUrl + "' alt='Picture'>")
+		}
+	}
+</script>

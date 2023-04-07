@@ -11513,3 +11513,8 @@ input[type=checkbox]:checked + .w-check-trail .w-check-handler::before {
     width: 1rem;
 }
 
+.new-feature{
+    position: absolute;
+    color: red;
+    z-index: 10;
+}

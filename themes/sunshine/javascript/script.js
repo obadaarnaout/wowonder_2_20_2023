@@ -3843,3 +3843,19 @@ function Wo_progressIconLoader(e){e.each(function(){return progress_icon_elem=$(
             );
         });
 });
+function replaceLogos(mode = 'night') {
+  let regex = /sunshine\/img\/logo\.png/g;
+  let replace = "sunshine/img/night-logo.png";
+  if (mode == 'day') {
+    regex = /sunshine\/img\/night-logo\.png/g;
+    replace = "sunshine/img/logo.png";
+  }
+  const images = document.getElementsByTagName("img");
+  for (let i = 0; i < images.length; i++) {
+    const oldSrc = images[i].getAttribute("src");
+    if (oldSrc != null) {
+      const newSrc = oldSrc.replace(regex, replace);
+      images[i].setAttribute("src", newSrc);
+    }
+  }
+}

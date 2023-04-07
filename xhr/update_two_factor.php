@@ -178,17 +178,22 @@ if ($f == 'update_two_factor') {
         if (empty($data['message'])) {
             if ($_POST['factor_method'] == 'google') {
                 require_once 'assets/libraries/google_auth/vendor/autoload.php';
-                $google2fa = new \PragmaRX\Google2FA\Google2FA();
-                if ($google2fa->verifyKey($wo['user']['google_secret'], $_POST['code'])) {
-                    $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
-                                                                                    'two_factor_verified' => 1,
-                                                                                    'two_factor_method' => 'google']);
-                 
-                    $data['status'] = 200;
-                    $data['message'] = $success_icon . $wo['lang']['setting_updated'];
-                } else {
-                    $data['message'] = $wo['lang']['wrong_confirm_code'];
+                try {
+                    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                    if ($google2fa->verifyKey($wo['user']['google_secret'], $_POST['code'])) {
+                        $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                        'two_factor_verified' => 1,
+                                                                                        'two_factor_method' => 'google']);
+                     
+                        $data['status'] = 200;
+                        $data['message'] = $success_icon . $wo['lang']['setting_updated'];
+                    } else {
+                        $data['message'] = $wo['lang']['wrong_confirm_code'];
+                    }
+                } catch (Exception $e) {
+                    $data['message'] = $e->getMessage();
                 }
+                    
             }
             elseif ($_POST['factor_method'] == 'authy') {
                 if (verifyAuthy($_POST['code'],$wo['user']['authy_id'])) {
@@ -267,6 +272,29 @@ if ($f == 'update_two_factor') {
                 $data['message'] = $result->message;
             }
         }
+    }
+
+    if ($s == 'backup_codes') {
+        $codes = $db->where('user_id',$wo['user']['id'])->getOne(T_BACKUP_CODES);
+        $filename = 'backup-codes.txt';
+        if (!empty($codes)) {
+            $backupCodes = json_decode($codes->codes,true);
+            createBackupCodesFile($backupCodes,$filename);
+        }
+        else{
+            $backupCodes = createBackupCodes();
+            createBackupCodesFile($backupCodes,$filename);
+
+            $id = $db->insert(T_BACKUP_CODES,[
+                'user_id' => $wo['user']['id'],
+                'codes' => json_encode($backupCodes)
+            ]);
+        }
+
+        header('Content-Type: text/plain');
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Pragma: no-cache');
+        exit;
     }
     header("Content-type: application/json");
     echo json_encode($data);

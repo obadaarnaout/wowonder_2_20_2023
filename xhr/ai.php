@@ -120,7 +120,11 @@ elseif ($s == 'generateBlog') {
 	$data['status'] = 400;
 	if (!empty($_POST['text']) && !empty($_POST['count'])) {
 		try {
-			$data = getOpenAiBlog($_POST['text'],$_POST['count']);
+			$thumbnail = false;
+			if (!empty($_POST['thumbnail']) && $_POST['thumbnail'] == 'on') {
+				$thumbnail = true;
+			}
+			$data = getOpenAiBlog($_POST['text'],$_POST['count'],$thumbnail);
 		} catch (Exception $e) {
 			$data['message'] = $e->getMessage();
 		}

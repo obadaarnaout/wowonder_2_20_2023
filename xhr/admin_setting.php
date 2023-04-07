@@ -4095,6 +4095,14 @@ if ($f == 'admin_setting' AND (Wo_IsAdmin() || Wo_IsModerator())) {
             );
             $media    = Wo_UploadLogo($fileInfo);
         }
+        if (isset($_FILES['night_logo']['name'])) {
+            $fileInfo = array(
+                'file' => $_FILES["night_logo"]["tmp_name"],
+                'name' => $_FILES['night_logo']['name'],
+                'size' => $_FILES["night_logo"]["size"]
+            );
+            $media    = Wo_UploadNightLogo($fileInfo);
+        }
         if (isset($_FILES['background']['name'])) {
             $fileInfo = array(
                 'file' => $_FILES["background"]["tmp_name"],

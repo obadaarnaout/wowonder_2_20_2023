@@ -56,6 +56,7 @@
 		$('#ai-selected-post-button').remove();
 		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=openai_post', {text: $('#aiPostText').val(),count: $('#aiPostCount').val()}, function(data, textStatus, xhr) {
 			if (data.status == 200) {
+				$('#generatedAiPostText').show();
 				<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
 					$('#current_user_credits').val(data.credits);
 					var text = "<?php echo($wo['lang']['available_words_credits']); ?>";
@@ -63,7 +64,7 @@
 					checkMaxAllowedPostWords('#aiPostCount');
 				<?php } ?>
 
-				$("#ai-generate-post-button").text("<?php echo $wo['lang']['generate']; ?>");
+				$("#ai-generate-post-button").text("<?php echo $wo['lang']['regenerate']; ?>");
 				$("#ai-generate-post-button").removeAttr('disabled');
 				$('#generatedAiPostText').val(data.output);
 				$("#AI-post-modal .modal-footer").prepend('<button type="button" class="btn main btn-mat" id="ai-selected-post-button" onclick="addAIPost()"><?php echo $wo['lang']['select']; ?></button>');
@@ -87,6 +88,9 @@
 		$('#AI-post-modal textarea').val('');
 	}
 	function openPostModel() {
+		$('#aiPostText').val('');
+		$('#aiPostCount').val('');
+		$('#generatedAiPostText').val('');
 		$("#ai-generate-post-button").removeAttr('disabled');
 		$('.ai_generate_post_alert').html("");
 		<?php if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>

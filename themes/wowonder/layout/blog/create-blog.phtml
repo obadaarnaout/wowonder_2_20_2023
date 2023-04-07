@@ -5,12 +5,17 @@
 			<div class="page-margin wow_content mt-0">
 				<div class="wo_page_hdng pag_neg_padd pag_alone">
 					<div class="wo_page_hdng_innr">
-						<span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M20,11V8H4V11H20M13,13V14.68C12.37,15.63 12,16.77 12,18C12,19.09 12.29,20.12 12.8,21H4A2,2 0 0,1 2,19V3L3.67,4.67L5.33,3L7,4.67L8.67,3L10.33,4.67L12,3L13.67,4.67L15.33,3L17,4.67L18.67,3L20.33,4.67L22,3V13.5C20.93,12.58 19.53,12 18,12C16.77,12 15.63,12.37 14.68,13H13M11,19V13H4V19H11Z"></path></svg></span> <?php echo $wo['lang']['create_new_article'];?>
+						<span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M20,11V8H4V11H20M13,13V14.68C12.37,15.63 12,16.77 12,18C12,19.09 12.29,20.12 12.8,21H4A2,2 0 0,1 2,19V3L3.67,4.67L5.33,3L7,4.67L8.67,3L10.33,4.67L12,3L13.67,4.67L15.33,3L17,4.67L18.67,3L20.33,4.67L22,3V13.5C20.93,12.58 19.53,12 18,12C16.77,12 15.63,12.37 14.68,13H13M11,19V13H4V19H11Z"></path></svg></span> <?php echo ($wo['page'] == 'create-ai-blog' ? $wo['lang']['create_new_article_ai'] : $wo['lang']['create_new_article']);?>
 					</div>
 				</div>
 			</div>
 			
 			<div class="page-margin wow_content wow_sett_content">
+				<?php if ($wo['page'] == 'create-ai-blog' && $wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+				<div class="alert alert-warning">
+					<p class="creditTB"><?php echo(str_replace('{credit}', getAvailableWordBalance(), $wo['lang']['available_words_credits'])) ?></p>
+				</div>
+				<?php } ?>
 				<form class="form form-horizontal create-article-form" method="post" id="insert-blog" action="#">
 					<div class="wow_form_fields">
 						<label for="blog_title"><?php echo $wo['lang']['title']; ?></label>
@@ -72,6 +77,9 @@
 						<a class="btn btn-mat" data-ajax="?link1=my-blogs" href="<?php echo Wo_SeoLink('index.php?link1=my-blogs');?>">
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"></path></svg> <?php echo $wo['lang']['go_back'];?>
 						</a>
+						<?php if ($wo['page'] == 'create-ai-blog') { ?>
+						<button class="btn btn-main btn-mat btn-mat-raised" type="button" onclick="openAIBlog()"><?php echo $wo['lang']['generate_using_ai']; ?></button>
+						<?php } ?>
 						<button class="btn btn-main btn-mat btn-mat-raised add_wow_loader" type="submit"><?php echo $wo['lang']['publish']; ?></button>
 					</div>
 					<input type="file" class="hidden" id="thumbnail" name="thumbnail" accept="image/*">
@@ -83,6 +91,7 @@
 	</div>
 	<!-- .row -->
 </div>
+<?php if ($wo['page'] == 'create-ai-blog') { echo Wo_LoadPage('modals/ai_blog'); } ?>
 <script>
 jQuery(document).ready(function($) {
     var thumb_drop_block = $("[data-block='thumdrop-zone']");
@@ -139,23 +148,13 @@ jQuery(document).ready(function($) {
         $('#insert-blog').find('.add_wow_loader').removeClass('btn-loading');
       }});
  });
-
 tinymce.init({
-  selector: '#blog',
-  height: 270,
-  images_upload_credentials: true,
-  paste_data_images: true,
-  image_advtab: true,
-  entity_encoding : "raw",
-  images_upload_url: Wo_Ajax_Requests_File() + '?f=upload-blog-image',
-  toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-  toolbar2: "print preview media | forecolor backcolor emoticons",
-  plugins: [
-      "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-      "searchreplace wordcount visualblocks visualchars code fullscreen",
-      "insertdatetime media nonbreaking save table contextmenu directionality",
-      "emoticons template paste textcolor colorpicker textpattern"
-    ],
+      selector: '#blog',
+      height: 400,
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
     file_picker_callback: function(callback, value, meta) {
       if (meta.filetype == 'image') {
         $('#upload').trigger('click');

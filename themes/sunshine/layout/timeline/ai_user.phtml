@@ -53,7 +53,7 @@
 		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=check', {id: id}, function(data, textStatus, xhr) {
 			if (data.status == 200) {
 				if (data.output == null) {
-					$("#ai-user-button").text(data.status_text);
+					$("#ai-user-button").html(data.status_text + '<div class="post_drop_menu_loading"><div class="ball-pulse"><div></div><div></div><div></div></div></div>');
 				}
 				else{
 					clearInterval(window.checkAI);
@@ -63,7 +63,7 @@
 						$('#creditTU').text(text.replace("{credit}", getAvailableByType('image')));
 					<?php } ?>
 					
-					$("#ai-user-button").text("<?php echo($wo['lang']['generate']) ?>");
+					$("#ai-user-button").text("<?php echo($wo['lang']['regenerate']) ?>");
 					$("#ai-user-button").removeAttr('disabled');
 					
 					var ii = 0;
@@ -119,6 +119,10 @@
 	}
 	function openAiUserModel(type = 'avatar') {
 		
+		$("#AI-user-modal #productimage-holder").html('');
+		$('#ai-selected-user-button').remove();
+		$('#aiUserText').val('');
+		aiUserImage = [];
 		$('#ai-user-model-type').val(type);
 		$("#ai-user-button").removeAttr('disabled');
 		$('.ai_user_alert').html("");

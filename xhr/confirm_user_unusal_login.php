@@ -23,17 +23,32 @@ if ($f == 'confirm_user_unusal_login') {
         $user_id = $user->user_id;
 
         $confirm_code = 0;
+        if ($user->two_factor_method == 'google' || $user->two_factor_method == 'authy') {
+            $codes = $db->where('user_id',$user_id)->getOne(T_BACKUP_CODES);
+            if (!empty($codes) && !empty($codes->codes)) {
+                $backupCodes = json_decode($codes->codes,true);
+                if (in_array($_POST['confirm_code'], $backupCodes)) {
+                    $confirm_code = 1;
+                }
+            }
+        }
+
+        
         if ($user->two_factor_method == 'two_factor' && $user->email_code == md5($_POST['confirm_code'])) {
             $confirm_code = 1;
         }
-        else if ($user->two_factor_method == 'google' && !empty($user->google_secret)) {
+        else if ($user->two_factor_method == 'google' && !empty($user->google_secret) && $confirm_code == 0) {
             require_once 'assets/libraries/google_auth/vendor/autoload.php';
-            $google2fa = new \PragmaRX\Google2FA\Google2FA();
-            if ($google2fa->verifyKey($user->google_secret, $_POST['confirm_code'])) {
-                $confirm_code = 1;
+            try {
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                if ($google2fa->verifyKey($user->google_secret, $_POST['confirm_code'])) {
+                    $confirm_code = 1;
+                }
+            } catch (Exception $e) {
+                $errors = $e->getMessage();
             }
         }
-        else if ($user->two_factor_method == 'authy' && !empty($user->authy_id) && verifyAuthy($_POST['confirm_code'],$user->authy_id)) {
+        else if ($user->two_factor_method == 'authy' && !empty($user->authy_id) && $confirm_code == 0 && verifyAuthy($_POST['confirm_code'],$user->authy_id)) {
             $confirm_code = 1;
         }
 

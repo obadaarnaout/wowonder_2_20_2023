@@ -4791,6 +4791,40 @@ function Wo_UploadLogo($data = array()) {
         }
     }
 }
+function Wo_UploadNightLogo($data = array()) {
+    global $wo, $sqlConnect;
+    if (isset($data['file']) && !empty($data['file'])) {
+        $data['file'] = $data['file'];
+    }
+    if (isset($data['name']) && !empty($data['name'])) {
+        $data['name'] = Wo_Secure($data['name']);
+    }
+    if (isset($data['name']) && !empty($data['name'])) {
+        $data['name'] = Wo_Secure($data['name']);
+    }
+    if (empty($data)) {
+        return false;
+    }
+    $allowed           = 'jpg,png,jpeg,gif';
+    $new_string        = pathinfo($data['name'], PATHINFO_FILENAME) . '.' . strtolower(pathinfo($data['name'], PATHINFO_EXTENSION));
+    $extension_allowed = explode(',', $allowed);
+    $file_extension    = pathinfo($new_string, PATHINFO_EXTENSION);
+    if (!in_array($file_extension, $extension_allowed)) {
+        return false;
+    }
+    $dir      = "themes/" . $wo['config']['theme'] . "/img/";
+    $filename = $dir . "night-logo.{$file_extension}";
+    if (move_uploaded_file($data['file'], $filename)) {
+        $check_file = getimagesize($filename);
+        if (!$check_file) {
+            unlink($filename);
+            return false;
+        }
+        if (Wo_SaveConfig('logo_extension', $file_extension.'?cache='.rand(100,999))) {
+            return true;
+        }
+    }
+}
 function Wo_UploadBackground($data = array()) {
     global $wo, $sqlConnect;
     if (isset($data['file']) && !empty($data['file'])) {
@@ -10223,7 +10257,7 @@ function getAvailableWordBalance()
         return $wo['user']['credits'] / $wo['config']['generated_word_price'];
     }
 }
-function getOpenAiBlog($text,$count)
+function getOpenAiBlog($text,$count,$thumbnail = false)
 {
     global $wo,$db;
 
@@ -10253,11 +10287,23 @@ function getOpenAiBlog($text,$count)
         $description = !empty($descriptionMatches) && !empty($descriptionMatches[1]) ? $descriptionMatches[1] : '';
         $content = !empty($contentMatches) && !empty($contentMatches[1]) ? $contentMatches[1] : '';
 
+        $output = null;
+        if ($thumbnail == true && !empty($title)) {
+            $result = getOpenAiImage($title,'256x256',1);
+            if (!empty($result['data'])) {
+                $urls = array_map(function ($img) {
+                    return loadImageContent($img->url);
+                }, $result['data']);
+                $output = $urls;
+            }
+        }
+
         return [
             'status' => 200,
             'title' => $title,
             'description' => $description,
             'content' => $content,
+            'output' => $output,
             'credits' => $db->where('user_id',$wo['user']['id'])->getValue(T_USERS,'credits')
         ];
     }
@@ -10590,4 +10636,28 @@ function verifyAuthy($code='',$authy_id='')
         return true;
     }
     return false;
+}
+function getSunshineLogo()
+{
+    global $sqlConnect,$db,$wo;
+    if (file_exists('themes/sunshine/img/night-logo.png') && !empty($_COOKIE['mode']) && $_COOKIE['mode'] == 'night') {
+        return 'night-';
+    }
+    return '';
+}
+function createBackupCodes($count = 10)
+{
+    $backupCodes = array();
+    for ($i = 1; $i <= 10; $i++) {
+        $backupCodes[] = rand(111111,999999);
+    }
+    return $backupCodes;
+}
+function createBackupCodesFile($backupCodes,$fileName)
+{
+    $fp = fopen('php://output', 'w');
+    array_map(function ($code) use ($fp) {
+        fputcsv($fp, array($code));
+    }, $backupCodes);
+    fclose($fp);
 }

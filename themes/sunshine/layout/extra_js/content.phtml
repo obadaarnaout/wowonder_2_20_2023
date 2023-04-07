@@ -602,7 +602,9 @@ $(document).on('click', '#night_mode_toggle', function(event) {
       $('#night-mode-text').text('<?php echo $wo['lang']['day_mode']?>');
 	  $(this).find('.night_day_switch').addClass('night');
 	  $(this).find('.night_day_switch').removeClass('day');
+    replaceLogos('night');
   } else {
+      replaceLogos('day');
       $('#night-mode-css').remove();
       $('#night_mode_toggle').attr('data-mode', 'night');
       $('#night-mode-text').text('<?php echo $wo['lang']['night_mode']?>');

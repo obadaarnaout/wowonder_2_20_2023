@@ -5,15 +5,23 @@
 			<form class="form form-horizontal create-article-form" method="post" id="insert-blog" action="#">
 				<div class="page-margin mt-0">
 					<div class="wow_content popular_posts_hdr flex">
-						<h2>&nbsp;<?php echo $wo['lang']['create_new_article'];?></h2>
+						<h2>&nbsp;<?php echo ($wo['page'] == 'create-ai-blog' ? $wo['lang']['create_new_article_ai'] : $wo['lang']['create_new_article']);?></h2>
 						<div class="btnss">
 							<a class="btn btn-mat btn-default" data-ajax="?link1=my-blogs" href="<?php echo Wo_SeoLink('index.php?link1=my-blogs');?>"><?php echo $wo['lang']['cancel'];?></a>
+							<?php if ($wo['page'] == 'create-ai-blog') { ?>
+							<button class="btn btn-main btn-mat btn-mat-raised" type="button" onclick="openAIBlog()"><?php echo $wo['lang']['generate_using_ai']; ?></button>
+							<?php } ?>
 							<button class="btn btn-main btn-mat add_wow_loader" type="submit"><?php echo $wo['lang']['publish']; ?></button>
 						</div>
 					</div>
 				</div>
 			
 				<div class="page-margin wow_content wow_sett_content">
+					<?php if ($wo['page'] == 'create-ai-blog' && $wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) { ?>
+					<div class="alert alert-warning">
+						<p class="creditTB"><?php echo(str_replace('{credit}', getAvailableWordBalance(), $wo['lang']['available_words_credits'])) ?></p>
+					</div>
+					<?php } ?>
 					<div class="setting-update-alert" id="blog-alert"></div>
 					
 					<div class="wow_form_fields">
@@ -79,6 +87,7 @@
 	</div>
 	<!-- .row -->
 </div>
+<?php if ($wo['page'] == 'create-ai-blog') { echo Wo_LoadPage('modals/ai_blog'); } ?>
 <script>
 jQuery(document).ready(function($) {
     var thumb_drop_block = $("[data-block='thumdrop-zone']");
@@ -137,21 +146,12 @@ jQuery(document).ready(function($) {
  });
 
 tinymce.init({
-  selector: '#blog',
-  height: 270,
-  images_upload_credentials: true,
-  paste_data_images: true,
-  image_advtab: true,
-  entity_encoding : "raw",
-  images_upload_url: Wo_Ajax_Requests_File() + '?f=upload-blog-image',
-  toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-  toolbar2: "print preview media | forecolor backcolor emoticons",
-  plugins: [
-      "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-      "searchreplace wordcount visualblocks visualchars code fullscreen",
-      "insertdatetime media nonbreaking save table contextmenu directionality",
-      "emoticons template paste textcolor colorpicker textpattern"
-    ],
+      selector: '#blog',
+      height: 400,
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name',
     file_picker_callback: function(callback, value, meta) {
       if (meta.filetype == 'image') {
         $('#upload').trigger('click');

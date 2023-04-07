@@ -88,7 +88,7 @@
 				$('#ai-selected-button').remove();
 				aiImages = [];
 				if (data.output == null) {
-					$("#ai-generate-button").text(data.status_text);
+					$("#ai-generate-button").html(data.status_text + '<div class="post_drop_menu_loading"><div class="ball-pulse"><div></div><div></div><div></div></div></div>');
 				}
 				else{
 					<?php if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) { ?>
@@ -96,7 +96,7 @@
 						var text = "<?php echo($wo['lang']['available_images_credits']); ?>";
 						$('#creditT').text(text.replace("{credit}", getAvailableByType('image')));
 					<?php } ?>
-					$("#ai-generate-button").text("<?php echo($wo['lang']['generate']) ?>");
+					$("#ai-generate-button").text("<?php echo($wo['lang']['regenerate']) ?>");
 					$("#ai-generate-button").removeAttr('disabled');
 					clearInterval(window.checkAI);
 					if ($(".add_more_images").length == 0) {
@@ -109,7 +109,7 @@
 					     var fileData = await imageDataToFile(dataUrl, "Ai_image_"+ii+".jpg");
 					     aiImages.push(fileData);
 					     name = "'"+data.output[ii]+"'";
-								$("#AI-modal #productimage-holder").append('<span class="thumb-image-delete" id="image_to_'+ii+'" data-href="'+dataUrl+'" onclick="Wo_OpenLighteBox(this,event);"><input type="checkbox" id="check-data-'+ii+'" class="pointer thumb-image-delete-btn delete-checkbox" data-image-id="'+ii+'"><img src="'+dataUrl+'" class="thumb-image"></span>')
+								$("#AI-modal #productimage-holder").append('<span class="thumb-image-delete" id="image_to_'+ii+'"><input type="checkbox" id="check-data-'+ii+'" class="pointer thumb-image-delete-btn delete-checkbox" data-image-id="'+ii+'"><span data-href="'+dataUrl+'" onclick="Wo_OpenLighteBox(this,event);" class="pointer ai_image_abs"><img src="'+dataUrl+'" class="thumb-image"></span></span>')
 					     
 					     if (ii == data.output.length - 1) {
 					     	$("#AI-modal .modal-footer").prepend('<button type="button" class="btn main btn-mat" id="ai-selected-button" onclick="addAIImages()" disabled><?php echo $wo['lang']['select']; ?></button>');
@@ -185,7 +185,7 @@
 					     var fileData = imageDataToFile(dataUrl, "Ai_image_"+ii+".jpg");
 					     aiImages.push(fileData);
 					     name = "'"+data.output[ii]+"'";
-								$("#AI-modal #productimage-holder").append('<span class="thumb-image-delete" id="image_to_'+ii+'" data-href="'+dataUrl+'" onclick="Wo_OpenLighteBox(this,event);"><input type="checkbox" id="check-data-'+ii+'" class="pointer thumb-image-delete-btn delete-checkbox" data-image-id="'+ii+'"><img src="'+dataUrl+'" class="thumb-image"></span>')
+								$("#AI-modal #productimage-holder").append('<span class="thumb-image-delete" id="image_to_'+ii+'"><input type="checkbox" id="check-data-'+ii+'" class="pointer thumb-image-delete-btn delete-checkbox" data-image-id="'+ii+'"><span data-href="'+dataUrl+'" onclick="Wo_OpenLighteBox(this,event);" class="pointer ai_image_abs"><img src="'+dataUrl+'" class="thumb-image"></span></span>')
 					     
 					     if (ii == data.output.length - 1) {
 					     	$("#AI-modal .modal-footer").prepend('<button type="button" class="btn main btn-mat" id="ai-selected-button" onclick="addAIImages()" disabled><?php echo $wo['lang']['select']; ?></button>');
@@ -214,7 +214,12 @@
 	  });
 	}
 	function openAIModel() {
-		
+		$('#aiText').val('');
+		$('#aiImageSize').val($('#aiImageSize option:first').val());
+		$('#num_outputs').val($('#num_outputs option:first').val());
+		$("#AI-modal #productimage-holder").html('');
+		$('#ai-selected-button').remove();
+		aiImages = [];
 		$("#ai-generate-button").removeAttr('disabled');
 		$('.ai_generate_alert').html("");
 		<?php if ($wo['config']['images_credit_system'] == 1 && $wo['config']['generated_image_price'] > 0) { ?>
