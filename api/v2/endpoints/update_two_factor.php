@@ -10,50 +10,67 @@ if (!empty($_POST['type']) && $_POST['type'] == 'verify') {
         $error_code    = 7;
         $error_message = 'code can not be empty';
     }
+    elseif (empty($_POST['factor_method']) || !in_array($_POST['factor_method'],array('two_factor','google','authy'))) {
+    	$error_code    = 8;
+        $error_message = 'Select factor method';
+    }
     else{
-        $confirm_code = $db->where('user_id', $wo['user']['user_id'])->where('email_code', md5($_POST['code']))->getValue(T_USERS, 'count(*)');
-        $Update_data = array();
-        if (empty($confirm_code)) {
-        	$error_code    = 8;
-	        $error_message = 'wrong confirmation code';
-        }
-        if (empty($error_code)) {
-            // if ($wo['config']['two_factor_type'] == 'phone') {
-            // 	if (!empty($wo['user']['new_phone'])) {
-            // 		$Update_data['phone_number'] = $wo['user']['new_phone'];
-	           //      $Update_data['new_phone'] = '';
-            // 	}
-            // }
-            // if ($wo['config']['two_factor_type'] == 'email') {
-            // 	if (!empty($wo['user']['new_email']) && filter_var($wo['user']['new_email'], FILTER_VALIDATE_EMAIL)) {
-            // 		$Update_data['email'] = $wo['user']['new_email'];
-	           //      $Update_data['new_email'] = '';
-            // 	}
-            // }
-            // if ($wo['config']['two_factor_type'] == 'both') {
-            //     if (!empty($wo['user']['new_email']) && filter_var($wo['user']['new_email'], FILTER_VALIDATE_EMAIL)) {
-            //         $Update_data['email'] = $wo['user']['new_email'];
-            //         $Update_data['new_email'] = '';
-            //     }
-            //     if (!empty($wo['user']['new_phone'])) {
-            //         $Update_data['phone_number'] = $wo['user']['new_phone'];
-            //         $Update_data['new_phone'] = '';
-            //     }
-            // }
-            if (!empty($wo['user']['new_email']) && filter_var($wo['user']['new_email'], FILTER_VALIDATE_EMAIL)) {
-                $Update_data['email'] = $wo['user']['new_email'];
-                $Update_data['new_email'] = '';
-            }
-            if (!empty($wo['user']['new_phone'])) {
-                $Update_data['phone_number'] = $wo['user']['new_phone'];
-                $Update_data['new_phone'] = '';
-            }
-            $Update_data['two_factor_verified'] = 1;
-            $Update_data['two_factor'] = 1;
-            Wo_UpdateUserData($wo['user']['user_id'], $Update_data);
 
-            $response_data['api_status'] = 200;
-			$response_data['message'] = 'two factor on';
+    	if ($_POST['factor_method'] == 'google') {
+            require_once 'assets/libraries/google_auth/vendor/autoload.php';
+            try {
+                $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                if ($google2fa->verifyKey($wo['user']['google_secret'], $_POST['code'])) {
+                    $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                    'two_factor_verified' => 1,
+                                                                                    'two_factor_method' => 'google']);
+                 
+                    $response_data['api_status'] = 200;
+                    $response_data['message'] = $wo['lang']['setting_updated'];
+                } else {
+                    $response_data['message'] = $wo['lang']['wrong_confirm_code'];
+                }
+            } catch (Exception $e) {
+                $response_data['message'] = $e->getMessage();
+            }
+                
+        }
+        elseif ($_POST['factor_method'] == 'authy') {
+            if (verifyAuthy($_POST['code'],$wo['user']['authy_id'])) {
+                $db->where('user_id', $wo['user']['user_id'])->update(T_USERS, ['two_factor' => 1,
+                                                                                'two_factor_verified' => 1,
+                                                                                'two_factor_method' => 'authy']);
+                $response_data['api_status'] = 200;
+                $response_data['message'] = $wo['lang']['setting_updated'];
+            }
+            else{
+                $response_data['api_status'] = 400;
+                $response_data['message'] = $wo['lang']['wrong_confirm_code'];
+            }
+        }
+        else{
+            if ($wo['user']['email_code'] == md5($_POST['code'])) {
+
+            	if (!empty($wo['user']['new_email']) && filter_var($wo['user']['new_email'], FILTER_VALIDATE_EMAIL)) {
+	                $Update_data['email'] = $wo['user']['new_email'];
+	                $Update_data['new_email'] = '';
+	            }
+	            if (!empty($wo['user']['new_phone'])) {
+	                $Update_data['phone_number'] = $wo['user']['new_phone'];
+	                $Update_data['new_phone'] = '';
+	            }
+	            $Update_data['two_factor_verified'] = 1;
+	            $Update_data['two_factor'] = 1;
+	            $Update_data['two_factor_method'] = 'two_factor';
+	            Wo_UpdateUserData($wo['user']['user_id'], $Update_data);
+
+	            $response_data['api_status'] = 200;
+				$response_data['message'] = 'two factor on';
+            }
+            else{
+                $response_data['api_status'] = 400;
+                $response_data['message'] = $wo['lang']['wrong_confirm_code'];
+            }
         }
     }
 }

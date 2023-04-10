@@ -379,7 +379,7 @@ if (!empty($_COOKIE['mode']) && $_COOKIE['mode'] == 'night') {
 
                 <div class="header-logo">
                     <a href="<?php echo $wo['config']['site_url'] ?>">
-                        <img class="logo" src="<?php echo $wo['config']['theme_url'];?>/img/logo.<?php echo $wo['config']['logo_extension'];?>" alt="logo">
+                        <img class="logo" src="<?php echo $wo['config']['theme_url'];?>/img/<?php echo($wo['config']['theme'] == 'sunshine' ? 'night-' : '') ?>logo.<?php echo $wo['config']['logo_extension'];?>" alt="logo">
                     </a>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 <?php $reactions = Wo_GetPostReactions($wo['message']['id'],'message'); ?>
 
-<div class="msg_date"><?php echo Wo_Time_Elapsed_String($wo['message']['time']);?></div>
+<div class="msg_date" data-chat-time="<?php echo date('d',$wo['message']['time']);?>" style="display: none;"><?php echo date('F d',$wo['message']['time']);?></div>
 
 <div class="message-contnaier mess_margin_b-<?php echo $wo['message']['id']; ?> <?php echo ($wo['message']['onwer'] == 0) ? 'incoming pull-left' : 'outgoing pull-right';?> <?php echo(!empty($reactions) ? 'margin-active' : '') ?>" id="messageId_<?php echo $wo['message']['id']; ?>">
 	<div class="cont_innr">

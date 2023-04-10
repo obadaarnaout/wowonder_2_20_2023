@@ -825,6 +825,8 @@ if (!empty($wo['story']['parent_id'])) {
 						</b>
                   <?php if($wo['story']['is_post_saved'] != true) { ?>
 						<p><?php echo $wo['lang']['save_post_tx'];?></p>
+                  <?php }else{ ?>
+                  <p><?php echo $wo['lang']['unsave_post_tx'];?></p>
                   <?php } ?>
 					</div>
 				</div>

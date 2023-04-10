@@ -1311,16 +1311,18 @@ function Wo_RegisterCommentReplyLike(reply_id) {
 // save post
 function Wo_SavePost(post_id) {
   var post = $('#post-' + post_id);
-  post.find('.save-post').html('<div class="post_drop_menu_loading"><div class="ball-pulse"><div></div><div></div><div></div></div></div>');
+  post.find('.save-post b').html('<div class="post_drop_menu_loading"><div class="ball-pulse"><div></div><div></div><div></div></div></div>');
   $.get(Wo_Ajax_Requests_File(), {
     f: 'posts',
     s: 'save_post',
     post_id: post_id
   }, function (data) {
     if(data.status == 200) {
-      post.find('.save-post').html(data.text);
+      post.find('.save-post b').html(data.text);
+      post.find('.save-post p').html(data.des);
     } else if(data.status == 300) {
-      post.find('.save-post').html(data.text);
+      post.find('.save-post b').html(data.text);
+      post.find('.save-post p').html(data.des);
     }
   });
 }
@@ -3841,3 +3843,8 @@ function Wo_progressIconLoader(e){e.each(function(){return progress_icon_elem=$(
             );
         });
 });
+function FileListItems (files) {
+  var b = new ClipboardEvent("").clipboardData || new DataTransfer()
+  for (var i = 0, len = files.length; i<len; i++) b.items.add(files[i])
+  return b.files
+}

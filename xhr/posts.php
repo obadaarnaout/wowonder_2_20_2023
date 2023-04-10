@@ -1894,12 +1894,14 @@ if ($f == 'posts') {
             if (Wo_SavePosts($post_data) == 'unsaved') {
                 $data = array(
                     'status' => 300,
-                    'text' => $wo['lang']['save_post']
+                    'text' => $wo['lang']['save_post'],
+                    'des' => $wo['lang']['save_post_tx']
                 );
             } else {
                 $data = array(
                     'status' => 200,
-                    'text' => $wo['lang']['unsave_post']
+                    'text' => $wo['lang']['unsave_post'],
+                    'des' => $wo['lang']['unsave_post_tx']
                 );
             }
         }

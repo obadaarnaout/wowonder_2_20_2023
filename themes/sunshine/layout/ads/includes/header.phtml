@@ -2,7 +2,7 @@
 	<div class="wow_content ads_mini_wallet">
 		<div>
 			<p><?php echo $wo['lang']['my_balance'];?></p>
-			<h3><?php echo Wo_GetCurrency($wo['config']['ads_currency']); ?><?php echo sprintf('%.2f',$wo['user']['wallet']);?></h3>
+			<h3><?php echo Wo_GetCurrency($wo['config']['ads_currency']); ?><?php echo number_format($wo['user']['wallet']);?></h3>
 		</div>
 		<img src="<?php echo $wo['config']['theme_url'];?>/img/pot.png">
 	</div>

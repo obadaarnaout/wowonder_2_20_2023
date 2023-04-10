@@ -10266,30 +10266,34 @@ function getOpenAiBlog($text,$count,$thumbnail = false)
     }
 
     $url = 'https://api.openai.com/v1/chat/completions';
-    $text = 'write a title starts {{title}} end {{endtitle}} and description starts {{description}} end {{enddescription}} and html content starts {{content}} end {{endcontent}} for this article ('.$text.')';
 
-    $js = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$text.'"}],"max_tokens": '.$count.'}';
-    $result = requestOpenAi($url,$js);
+    $titleText = 'write a title for this article ('.$text.')';
+    $titleJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$titleText.'"}]}';
+    $titleResult = requestOpenAi($url,$titleJs);
 
-    if (!empty($result->choices)) {
-        if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0) {
-            $full_content = str_replace(['{{title}}','{{endtitle}}','{{description}}','{{enddescription}}','{{content}}','{{endcontent}}'], '', strip_tags($result->choices[0]->message->content)) ;
+    $desText = 'write a description for this article ('.$text.')';
+    $desJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$desText.'"}]}';
+    $desResult = requestOpenAi($url,$desJs);
+
+    $contentText = 'write a html content for this article ('.$text.')';
+    $contentJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$contentText.'"}],"max_tokens": '.$count.'}';
+    $contentResult = requestOpenAi($url,$contentJs);
+
+    if (!empty($titleResult->choices) && !empty($desResult->choices)) {
+        if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0 && !empty($contentResult->choices)) {
+            $full_content = strip_tags($contentResult->choices[0]->message->content);
             $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
                 'credits' => $db->dec(($wo['config']['generated_word_price'] * str_word_count($full_content)))
             ]);
         }
 
-        preg_match('/{{title}}(.*?){{endtitle}}/', $result->choices[0]->message->content, $titleMatches);
-        preg_match('/{{description}}(.*?){{enddescription}}/', $result->choices[0]->message->content, $descriptionMatches);
-        preg_match('/{{content}}(.*?){{endcontent}}/s', $result->choices[0]->message->content, $contentMatches);
-
-        $title = !empty($titleMatches) && !empty($titleMatches[1]) ? $titleMatches[1] : '';
-        $description = !empty($descriptionMatches) && !empty($descriptionMatches[1]) ? $descriptionMatches[1] : '';
-        $content = !empty($contentMatches) && !empty($contentMatches[1]) ? $contentMatches[1] : '';
+        $title = !empty($titleResult->choices) && !empty($titleResult->choices[0]) ? str_replace('"', '', $titleResult->choices[0]->message->content) : '';
+        $description = !empty($desResult->choices) && !empty($desResult->choices[0]) ? $desResult->choices[0]->message->content : '';
+        $content = !empty($contentResult->choices) && !empty($contentResult->choices[0]) ? $contentResult->choices[0]->message->content : '';
 
         $output = null;
         if ($thumbnail == true && !empty($title)) {
-            $result = getOpenAiImage($title,'256x256',1);
+            $result = getOpenAiImage($title,'1024x1024',1);
             if (!empty($result['data'])) {
                 $urls = array_map(function ($img) {
                     return loadImageContent($img->url);
@@ -10307,8 +10311,14 @@ function getOpenAiBlog($text,$count,$thumbnail = false)
             'credits' => $db->where('user_id',$wo['user']['id'])->getValue(T_USERS,'credits')
         ];
     }
-    elseif (!empty($result->error) && !empty($result->error->message)) {
-        throw new Exception($result->error->message);
+    elseif (!empty($titleResult->error) && !empty($titleResult->error->message)) {
+        throw new Exception($titleResult->error->message);
+    }
+    elseif (!empty($desResult->error) && !empty($desResult->error->message)) {
+        throw new Exception($desResult->error->message);
+    }
+    elseif (!empty($contentResult->error) && !empty($contentResult->error->message)) {
+        throw new Exception($contentResult->error->message);
     }
     else{
         throw new Exception($wo['lang']['something_wrong']);

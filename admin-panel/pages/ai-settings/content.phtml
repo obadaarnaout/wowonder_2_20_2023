@@ -245,16 +245,6 @@
                 <div class="card-body">
                     <h6 class="card-title">Replicate AI Settings</h6>
                     <form class="email-settings" method="POST">
-                        <div class="form-group form-float">
-                            <div class="form-line">
-                                <label class="form-label">num_inference_steps</label>
-                                <input type="text" id="num_inference_steps" name="num_inference_steps" class="form-control" value="<?php echo $wo['config']['num_inference_steps']?>">
-                                <small class="admin-info">Number of denoising steps (minimum: 1; maximum: 500)</small>
-                            </div>
-                        </div>
-                        <div class="clearfix"></div>
-                        <hr>
-
                         <label class="form-check-label" for="midjeourny_model">Replicate Model</label>
                         <select class="form-control show-tick" id="midjeourny_model" name="midjeourny_model">
                               <option value="prompthero-openjourney" <?php echo ($wo['config']['midjeourny_model'] == 'prompthero-openjourney')   ? ' selected': '';?>>prompthero/openjourney</option>
@@ -263,11 +253,21 @@
                         </select>
                         <div class="clearfix"></div>
                         <hr>
+                        
                         <div class="form-group form-float">
                             <div class="form-line">
                                 <label class="form-label">Replicate API Token</label>
                                 <input type="text" id="replicate_token" name="replicate_token" class="form-control" value="<?php echo $wo['config']['replicate_token']?>">
                                 <small class="admin-info">Replicate API Token</small>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr>
+                        <div class="form-group form-float">
+                            <div class="form-line">
+                                <label class="form-label">num_inference_steps</label>
+                                <input type="text" id="num_inference_steps" name="num_inference_steps" class="form-control" value="<?php echo $wo['config']['num_inference_steps']?>">
+                                <small class="admin-info">Number of denoising steps (minimum: 1; maximum: 500)</small>
                             </div>
                         </div>
                         <div class="clearfix"></div>

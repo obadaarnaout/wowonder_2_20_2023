@@ -20,7 +20,7 @@
 						<input type="number" name="count" max="<?php echo($wo['config']['maxCharacters']); ?>" placeholder="<?php echo $wo['lang']['max_result_length']; ?>" id="aiPostCount" oninput="checkMaxAllowedPostWords(this)">
 					</div>
 					<div class="wow_form_fields">
-						<textarea dir="auto" rows="5" name="text" id="generatedAiPostText" placeholder="<?php echo $wo['lang']['generated_post']; ?>" readonly></textarea>
+						<textarea dir="auto" rows="5" name="text" id="generatedAiPostText" placeholder="<?php echo $wo['lang']['generated_post']; ?>" readonly style="display: none;"></textarea>
 					</div>
 			    <input type="hidden" name="user" value="<?php echo $wo['user']['user_id'];?>">
 				</div>
@@ -88,6 +88,9 @@
 		$('#AI-post-modal textarea').val('');
 	}
 	function openPostModel() {
+		$('#ai-selected-post-button').remove();
+		$('#generatedAiPostText').slideUp();
+		$("#ai-generate-post-button").text("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiPostText').val('');
 		$('#aiPostCount').val('');
 		$('#generatedAiPostText').val('');

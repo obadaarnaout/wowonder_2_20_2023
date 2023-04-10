@@ -33,7 +33,7 @@
 			<p class="bold"><?php echo $wo['lang']['my_balance'];?></p>
 			<div class="my_wallet wow_mini_wallets">
 				<div>
-					<h5><?php echo Wo_GetCurrency($wo['config']['ads_currency']); ?><?php echo sprintf('%.2f',$wo['user']['wallet']);?></h5>
+					<h5><?php echo Wo_GetCurrency($wo['config']['ads_currency']); ?><?php echo number_format($wo['user']['wallet']);?></h5>
 				</div>
 				<div class="wow_mini_wallets_btns">
 					<button data-toggle="modal" data-target="#send_money_modal" class="btn btn-default btn-mat">

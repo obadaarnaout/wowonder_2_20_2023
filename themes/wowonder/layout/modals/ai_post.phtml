@@ -88,6 +88,9 @@
 		$('#AI-post-modal textarea').val('');
 	}
 	function openPostModel() {
+		$('#ai-selected-post-button').remove();
+		$('#generatedAiPostText').slideUp();
+		$("#ai-generate-post-button").text("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiPostText').val('');
 		$('#aiPostCount').val('');
 		$('#generatedAiPostText').val('');

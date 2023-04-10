@@ -17,7 +17,7 @@
 						<textarea dir="auto" rows="5" name="text" id="aiBlogText" placeholder="<?php echo $wo['lang']['describe_article']; ?>"></textarea>
 					</div>
 					<div class="wow_form_fields">
-						<input type="number" name="count" max="<?php echo($wo['config']['maxCharacters']); ?>" placeholder="<?php echo $wo['lang']['max_result_length']; ?>" id="aiBlogCount" oninput="checkMaxAllowedPostWords(this)">
+						<input type="number" name="count" max="<?php echo($wo['config']['maxCharacters']); ?>" placeholder="<?php echo $wo['lang']['max_result_length_blog']; ?>" id="aiBlogCount" oninput="checkMaxAllowedBlogWords(this)">
 					</div>
 					<div class="wow_form_fields">
 						<div class="round-check">
@@ -40,8 +40,6 @@
 </div>
 <script type="text/javascript">
 	function refreshBlogInfo() {
-		console.log('fdsfsdfds')
-		
 		var text = "<?php echo($wo['lang']['available_words_credits']); ?>";
 		console.log(text.replace("{credit}", getAvailableByType('text')))
 		$('.creditTB').text(text.replace("{credit}", getAvailableByType('text')));
@@ -63,18 +61,19 @@
 		}
 	}
 	function openAIBlog() {
-		$('#AI-blog-modal').modal('show');
 		$('#aiBlogText').val('');
 		$('#aiBlogCount').val('');
+		$( "#ai_thumbnail" ).prop( "checked", false );
+		$('#AI-blog-modal').modal('show');
 	}
 	function generateBlog(self) {
 		$(self).text("<?php echo($wo['lang']['please_wait']) ?>");
 		$(self).attr('disabled',true);
-		tumbnail = 'off';
+		thumbnail = 'off';
         if ($('#ai_thumbnail').is(":checked") === true) {
-            tumbnail = 'on';
+            thumbnail = 'on';
         }
-		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=generateBlog', {text: $('#aiBlogText').val(),count: $('#aiBlogCount').val(),tumbnail:tumbnail}, function(data, textStatus, xhr) {
+		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=generateBlog', {text: $('#aiBlogText').val(),count: $('#aiBlogCount').val(),thumbnail:thumbnail}, function(data, textStatus, xhr) {
 			$(self).text("<?php echo $wo['lang']['generate']; ?>");
 			$(self).removeAttr('disabled');
 			if (data.status == 200) {
@@ -84,7 +83,7 @@
 					var text = "<?php echo($wo['lang']['available_words_credits']); ?>";
 					$('.creditTB').text(text.replace("{credit}", getAvailableByType('text')));
 					$('#aiBlogCount').attr('max',getAvailableByType('text'));
-					$('#aiBlogCount').val(getAvailableByType('text'));
+					//$('#aiBlogCount').val(getAvailableByType('text'));
 				<?php } ?>
 				$('#blog_title').val(data.title);
 				$('#new-blog-desc').val(data.description);
@@ -110,7 +109,7 @@
 			dataUrl = output[i];
 		    var fileData = imageDataToFile(dataUrl, "Ai_image_"+ii+".jpg");
 		    outputImages.push(fileData);
-		    $("#thumbnail").prop('files', outputImages);
+		    $("#thumbnail")[0].files = new FileListItems(outputImages);
           	$("#wow_fcov_img_holder").html("<img src='" + dataUrl + "' alt='Picture'>")
 		}
 	}

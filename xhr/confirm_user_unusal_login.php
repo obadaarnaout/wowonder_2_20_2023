@@ -28,6 +28,11 @@ if ($f == 'confirm_user_unusal_login') {
             if (!empty($codes) && !empty($codes->codes)) {
                 $backupCodes = json_decode($codes->codes,true);
                 if (in_array($_POST['confirm_code'], $backupCodes)) {
+                    $key = array_search($_POST['confirm_code'], $backupCodes);
+                    $backupCodes[$key] = rand(111111,999999);
+                    $db->where('user_id',$user_id)->update(T_BACKUP_CODES,[
+                        'codes' => json_encode($backupCodes)
+                    ]);
                     $confirm_code = 1;
                 }
             }
