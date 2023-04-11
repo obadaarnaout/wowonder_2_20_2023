@@ -635,6 +635,9 @@ if (!empty($_GET['url'])) {
    <?php } ?>
    <input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
    <input type="hidden" name="postRecord" value="" id="postRecord">
+   <?php if ($wo['config']['ai_post_system'] == 1 || $wo['config']['ai_image_system'] == 1) { ?>
+   	<input type="hidden" name="ai_post" value="off" id="isAiPost">
+   <?php } ?>
    <input type="hidden" name="postSticker" value="" id="postSticker" onchange="alert(this.value)">
 </form>
 <div id="hidden_inputbox"></div>

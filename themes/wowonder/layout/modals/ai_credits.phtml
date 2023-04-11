@@ -10,7 +10,8 @@
 					<div class="ai_credit_alert"></div>
 					<div class="ai_credit_prices"></div>
 					<div class="wow_form_fields">
-						<input type="text" placeholder="<?php echo $wo['lang']['amount']?>" onkeyup="checkCanBuy(this)" id="ai-credit-input">
+						<input type="number" placeholder="<?php echo $wo['lang']['amount']?>" onkeyup="updatedConvertedWalletAmount(this);checkCanBuy(this)" id="ai-credit-input">
+						<p class="ai_wallet_amount"></p>
 					</div>
 			    <input type="hidden" name="user" value="<?php echo $wo['user']['user_id'];?>">
 			    <input type="hidden" value="<?php echo $wo['user']['credits'];?>" id="current_user_credits">
@@ -26,6 +27,15 @@
 </div>
 
 <script type="text/javascript">
+	function updatedConvertedWalletAmount(self) {
+		let num = Number($(self).val());
+		if (typeof num === "number" && !isNaN(num) && num > 0) {
+			$('.ai_wallet_amount').html("<?php echo($wo['lang']['equals_to']) ?> <?php echo Wo_GetCurrency($wo['config']['ads_currency']); ?>" + (parseInt($(self).val()) / <?php echo($wo['config']['credit_price']) ?>));
+		}
+		else{
+			$('.ai_wallet_amount').html("");
+		}
+	}
 	function getAvailableByType(type = 'image'){
 		if (type == 'text') {
 			return parseInt(parseInt($('#current_user_credits').val()) / parseInt("<?php echo($wo['config']['generated_word_price']) ?>"));
@@ -73,13 +83,14 @@
 		});
 	}
 	function openAICredit(id) {
+		$('.ai_wallet_amount').html("");
 		$('#ai-credit-input').val('');
 		$('#ai_credit_alert').html('');
 		<?php if ($wo['user']['wallet'] < 1) { ?>
 			$('.ai_credit_alert').html("<div class='alert alert-danger'><a href='<?php echo $wo['config']['site_url'];?>/wallet'><?php echo $wo["lang"]["please_top_up_wallet"]?></a></div>");
 		<?php } ?>
 		var div = '<div class="alert alert-warning"><p>{TX}</p></div>';
-		if (id == 'AI-post-modal' || id == 'AI-blog') {
+		if (id == 'AI-post-modal' || id == 'AI-blog-modal') {
 			$('.ai_credit_prices').html(div.replace('{TX}',"<?php echo(str_replace('{price}', $wo['config']['generated_word_price'], $wo['lang']['text_price'])) ?>"));
 		}
 		else{
@@ -90,6 +101,7 @@
 		$('#AI-post-modal').modal('hide');
 		$('#AI-user-modal').modal('hide');
 		$('#AI-modal').modal('hide');
+		$('#AI-blog-modal').modal('hide');
 		$('#AI-credit-modal').modal('show');
 	}
 </script>

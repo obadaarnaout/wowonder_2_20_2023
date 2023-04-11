@@ -33,7 +33,11 @@ if ($f == 'update_user_avatar_picture') {
         '30'
     );
     if (isset($_FILES['avatar']['name'])) {
-        $upload = Wo_UploadImage($_FILES["avatar"]["tmp_name"], $_FILES['avatar']['name'], 'avatar', $_FILES['avatar']['type'], $_POST['user_id']);
+        $ai_post = 0;
+        if ($wo['config']['ai_user_system'] == 1 && !empty($_POST['ai_post']) && $_POST['ai_post'] == 'on') {
+            $ai_post = 1;
+        }
+        $upload = Wo_UploadImage($_FILES["avatar"]["tmp_name"], $_FILES['avatar']['name'], 'avatar', $_FILES['avatar']['type'], $_POST['user_id'],'',$ai_post);
         if ($upload === true) {
             $img  = Wo_UserData($_POST['user_id']);
             $data = array(

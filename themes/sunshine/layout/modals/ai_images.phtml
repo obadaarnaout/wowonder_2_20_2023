@@ -79,6 +79,7 @@
 		$('#ai-selected-button').remove();
 		$('#AI-modal textarea').val('');
 		aiImages = [];
+		$('#isAiPost').val('on');
 	}
 	function checkAIImages(id) {
 		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=check', {id: id}, function(data, textStatus, xhr) {
@@ -214,6 +215,7 @@
 	  });
 	}
 	function openAIModel() {
+		$("#ai-generate-button").html("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiText').val('');
 		$('#aiImageSize').val($('#aiImageSize option:last').val());
 		$('#num_outputs').val($('#num_outputs option:first').val());

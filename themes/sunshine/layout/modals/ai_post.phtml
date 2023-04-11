@@ -14,7 +14,7 @@
 					</div>
 					<?php } ?>
 					<div class="wow_form_fields">
-						<textarea dir="auto" rows="5" name="text" id="aiPostText"></textarea>
+						<textarea dir="auto" rows="5" name="text" id="aiPostText" placeholder="<?php echo $wo['lang']['tell_me_a_joke']; ?>"></textarea>
 					</div>
 					<div class="wow_form_fields">
 						<input type="number" name="count" max="<?php echo($wo['config']['maxCharacters']); ?>" placeholder="<?php echo $wo['lang']['max_result_length']; ?>" id="aiPostCount" oninput="checkMaxAllowedPostWords(this)">
@@ -67,7 +67,7 @@
 				$("#ai-generate-post-button").text("<?php echo $wo['lang']['regenerate']; ?>");
 				$("#ai-generate-post-button").removeAttr('disabled');
 				$('#generatedAiPostText').val(data.output);
-				$("#AI-post-modal .modal-footer").prepend('<button type="button" class="btn main btn-mat" id="ai-selected-post-button" onclick="addAIPost()"><?php echo $wo['lang']['select']; ?></button>');
+				$("#AI-post-modal .modal-footer").prepend('<button type="button" class="btn main btn-mat" id="ai-selected-post-button" onclick="addAIPost()"><?php echo $wo['lang']['use_text']; ?></button>');
 			}
 			else{
 				$("#ai-generate-post-button").removeAttr('disabled');
@@ -84,13 +84,14 @@
 		$('#post-textarea .postText').val($('#generatedAiPostText').val());
 		$('#AI-post-modal').modal('hide');
 		$('#postSticker').val('');
+		$('#isAiPost').val('on');
 		$('#ai-selected-post-button').remove();
 		$('#AI-post-modal textarea').val('');
 	}
 	function openPostModel() {
 		$('#ai-selected-post-button').remove();
 		$('#generatedAiPostText').slideUp();
-		$("#ai-generate-post-button").text("<?php echo $wo['lang']['generate']; ?>");
+		$("#ai-generate-post-button").html("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiPostText').val('');
 		$('#aiPostCount').val('');
 		$('#generatedAiPostText').val('');

@@ -602,6 +602,10 @@ if ($f == 'posts') {
                 'multi_image_post' => 0,
                 'active' => $post_active
             );
+            $post_data['ai_post'] = 0;
+            if (($wo['config']['ai_post_system'] == 1 || $wo['config']['ai_image_system'] == 1) && !empty($_POST['ai_post']) && $_POST['ai_post'] == 'on') {
+                $post_data['ai_post'] = 1;
+            }
             $post_data['send_notify'] = '';
             if ($wo['config']['notify_new_post'] == 1) {
                 if (!empty($wo['story']) && empty($wo['story']['page_id']) && empty($wo['story']['group_id']) && empty($wo['story']['event_id']) && $wo['story']['postPrivacy'] < 3) {
@@ -818,7 +822,7 @@ if ($f == 'posts') {
             }
         } else {
             if (empty($errors)) {
-                $errors = $wo['lang']['type_something_to_post'];
+                $errors = str_replace('&#039;', "'", $wo['lang']['type_something_to_post']);
             }
             $data = array(
                 'status' => 400,

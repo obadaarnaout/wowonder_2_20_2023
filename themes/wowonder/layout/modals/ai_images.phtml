@@ -79,6 +79,7 @@
 		$('#ai-selected-button').remove();
 		$('#AI-modal textarea').val('');
 		aiImages = [];
+		$('#isAiPost').val('on');
 	}
 	function checkAIImages(id) {
 		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=check', {id: id}, function(data, textStatus, xhr) {
@@ -179,7 +180,7 @@
 						$("#image-holder").prepend('<span class="wow_prod_imgs add_more_images"><div class="upload-product-image" onclick="document.getElementById(\'publisher-photos\').click(); return false"><div class="upload-image-content"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"></path></svg></div></div></span>')
 					}
 					
-	        		var ii = 0;
+	        var ii = 0;
 					for (var i = 0; i < data.output.length; i++) {
 						dataUrl = data.output[i];
 					     var fileData = imageDataToFile(dataUrl, "Ai_image_"+ii+".jpg");
@@ -214,6 +215,7 @@
 	  });
 	}
 	function openAIModel() {
+		$("#ai-generate-button").html("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiText').val('');
 		$('#aiImageSize').val($('#aiImageSize option:last').val());
 		$('#num_outputs').val($('#num_outputs option:first').val());

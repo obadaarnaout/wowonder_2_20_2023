@@ -1445,7 +1445,7 @@ function Wo_GetMedia($media) {
     }
     return $wo['config']['site_url'] . '/' . $media;
 }
-function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placement = '') {
+function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placement = '',$ai_post = 0) {
     global $wo, $sqlConnect;
     if ($wo['loggedin'] == false) {
         return false;
@@ -1547,7 +1547,8 @@ function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placemen
                                 'time' => time(),
                                 'postType' => Wo_Secure('profile_cover_picture'),
                                 'postPrivacy' => '0',
-                                'blur' => $blur
+                                'blur' => $blur,
+                                'ai_post' => $ai_post
                             ));
                         }
                     }
@@ -1624,7 +1625,8 @@ function Wo_UploadImage($file, $name, $type, $type_file, $user_id = 0, $placemen
                                     'time' => time(),
                                     'postType' => Wo_Secure('profile_picture'),
                                     'postPrivacy' => '0',
-                                    'blur' => $blur
+                                    'blur' => $blur,
+                                    'ai_post' => $ai_post
                                 ));
                             }
                             Wo_Resize_Crop_Image($wo['profile_picture_width_crop'], $wo['profile_picture_height_crop'], $filename, $filename, $wo['profile_picture_image_quality']);
@@ -10272,24 +10274,33 @@ function getOpenAiBlog($text,$count,$thumbnail = false)
     $titleResult = requestOpenAi($url,$titleJs);
 
     $desText = 'write a description for this article ('.$text.')';
-    $desJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$desText.'"}]}';
+    $desJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$desText.'"}],"max_tokens": 50}';
     $desResult = requestOpenAi($url,$desJs);
 
-    $contentText = 'write a html content for this article ('.$text.')';
-    $contentJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$contentText.'"}],"max_tokens": '.$count.'}';
+    $tagsText = 'write 10 tags seperated by # for this article ('.$text.')';
+    $tagsJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$tagsText.'"}]}';
+    $tagsResult = requestOpenAi($url,$tagsJs);
+
+    $contentText = 'write a content for this article ('.$text.') in '.$count.' word max and put it in html';
+    $contentJs = '{"model": "'.$wo['config']['openai_text_model'].'","messages": [{"role": "user", "content": "'.$contentText.'"}]}';
     $contentResult = requestOpenAi($url,$contentJs);
 
     if (!empty($titleResult->choices) && !empty($desResult->choices)) {
         if ($wo['config']['text_credit_system'] == 1 && $wo['config']['generated_word_price'] > 0 && !empty($contentResult->choices)) {
             $full_content = strip_tags($contentResult->choices[0]->message->content);
+            $dec = ($wo['config']['generated_word_price'] * str_word_count($full_content));
+            if ($dec > $wo['user']['credits']) {
+                $dec = $wo['user']['credits'];
+            }
             $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
-                'credits' => $db->dec(($wo['config']['generated_word_price'] * str_word_count($full_content)))
+                'credits' => $db->dec($dec)
             ]);
         }
 
         $title = !empty($titleResult->choices) && !empty($titleResult->choices[0]) ? str_replace('"', '', $titleResult->choices[0]->message->content) : '';
         $description = !empty($desResult->choices) && !empty($desResult->choices[0]) ? $desResult->choices[0]->message->content : '';
         $content = !empty($contentResult->choices) && !empty($contentResult->choices[0]) ? $contentResult->choices[0]->message->content : '';
+        $tags = !empty($tagsResult->choices) && !empty($tagsResult->choices[0]) && strpos($tagsResult->choices[0]->message->content, '#') !== false ? str_replace('#', ',', $tagsResult->choices[0]->message->content) : '';
 
         $output = null;
         if ($thumbnail == true && !empty($title)) {
@@ -10308,6 +10319,7 @@ function getOpenAiBlog($text,$count,$thumbnail = false)
             'description' => $description,
             'content' => $content,
             'output' => $output,
+            'tags' => $tags,
             'credits' => $db->where('user_id',$wo['user']['id'])->getValue(T_USERS,'credits')
         ];
     }

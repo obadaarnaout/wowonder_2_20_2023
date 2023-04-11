@@ -38,10 +38,12 @@
 		$('#AI-user-modal').modal('hide');
 		if (type == 'avatar') {
 			$('.profile_avatar input')[0].files = new FileListItems(aiUserImage);
+			$('#isAiAvatar').val('on');
 			Wo_UpdateProfileAvatar();
 		}
 		else{
 			$('.profile_cover input')[0].files = new FileListItems(aiUserImage);
+			$('#isAiCover').val('on');
 			Wo_UpdateProfileCover();
 		}
 		$("#AI-user-modal #productimage-holder").html('');

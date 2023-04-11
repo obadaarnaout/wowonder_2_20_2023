@@ -388,8 +388,11 @@ if ($f == 'wallet') {
             }
             else{
                 $amount = Wo_Secure($_POST['amount']);
+                $notes = $wo['lang']['ai_credit_purchase'];
+                $dec = ($amount / $wo['config']['credit_price']);
+                mysqli_query($sqlConnect, "INSERT INTO " . T_PAYMENT_TRANSACTIONS . " (`userid`, `kind`, `amount`, `notes`) VALUES ({$wo['user']['user_id']}, 'Credits', {$dec}, '{$notes}')");
                 $db->where('user_id',$wo['user']['id'])->update(T_USERS,[
-                    'wallet' => $db->dec(($amount / $wo['config']['credit_price'])),
+                    'wallet' => $db->dec($dec),
                     'credits' => $db->inc($amount)
                 ]);
                 $data['status'] = 200;

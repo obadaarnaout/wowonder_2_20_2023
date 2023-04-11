@@ -76,6 +76,9 @@
 					<input type="file" class="hidden" id="thumbnail" name="thumbnail" accept="image/*">
 					<input type="hidden" name="hash_id" value="<?php echo Wo_CreateSession();?>">
 					<input name="image" type="file" id="upload" class="hidden">
+					<?php if ($wo['config']['ai_blog_system'] == 1) { ?>
+				   	<input type="hidden" name="ai_post" value="off" id="isAiPost">
+				   <?php } ?>
 				</div>
 			</form>
 		</div>
@@ -143,7 +146,7 @@ jQuery(document).ready(function($) {
 tinymce.init({
       selector: '#blog',
       height: 400,
-      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
       toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
       tinycomments_mode: 'embedded',
       tinycomments_author: 'Author name',

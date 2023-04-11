@@ -61,20 +61,20 @@
 		}
 	}
 	function openAIBlog() {
-		$('#aiBlogText').val('');
+		$("#ai-generate-blog-button").html("<?php echo $wo['lang']['generate']; ?>");
 		$('#aiBlogCount').val('');
 		$( "#ai_thumbnail" ).prop( "checked", false );
 		$('#AI-blog-modal').modal('show');
 	}
 	function generateBlog(self) {
-		$(self).text("<?php echo($wo['lang']['please_wait']) ?>");
+		$(self).html("<?php echo($wo['lang']['please_wait']) ?>" + '<div class="post_drop_menu_loading"><div class="ball-pulse"><div></div><div></div><div></div></div></div>');
 		$(self).attr('disabled',true);
 		thumbnail = 'off';
         if ($('#ai_thumbnail').is(":checked") === true) {
             thumbnail = 'on';
         }
 		$.post(Wo_Ajax_Requests_File()+'?f=ai&s=generateBlog', {text: $('#aiBlogText').val(),count: $('#aiBlogCount').val(),thumbnail:thumbnail}, function(data, textStatus, xhr) {
-			$(self).text("<?php echo $wo['lang']['generate']; ?>");
+			$(self).html("<?php echo $wo['lang']['generate']; ?>");
 			$(self).removeAttr('disabled');
 			if (data.status == 200) {
 				$('#AI-blog-modal').modal('hide');
@@ -88,10 +88,12 @@
 				$('#blog_title').val(data.title);
 				$('#new-blog-desc').val(data.description);
 				$('#blog').val(data.content);
+				$('#blog_tags').tagsinput('add', data.tags);
 				tinymce.get('blog').setContent(data.content);
 				if (data.output && data.output.length > 0) {
 					let images = getConvertedImages(data.output);
 				}
+				$('#isAiPost').val('on');
 			}
 			else{
 				$('.ai_generate_blog_alert').html('<div class="alert alert-danger">' + data.message + '</div>');

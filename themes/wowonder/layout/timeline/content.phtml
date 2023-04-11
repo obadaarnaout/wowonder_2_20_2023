@@ -39,6 +39,7 @@ if ($wo['loggedin'] && $IsOwnerUser) {
 									</svg>
                                 </span>
                             </span>
+                            <input type="hidden" name="ai_post" value="off" id="isAiCover">
                         </div>
                     	<?php } ?>
                         <div class="input-group profile_cover">
@@ -124,6 +125,7 @@ if ($wo['loggedin'] && $IsOwnerUser) {
 										</g>
 									</g>
 									</svg>
+									<input type="hidden" name="ai_post" value="off" id="isAiAvatar">
 								</span>
 								<?php } ?>
 								<?php if ($wo['user_profile']['avatar_org'] != $wo['userDefaultAvatar'] && $wo['user_profile']['avatar_org'] != $wo['userDefaultFAvatar']) {?>

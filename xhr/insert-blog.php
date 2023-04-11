@@ -81,13 +81,18 @@ if ($f == "insert-blog") {
                 foreach ($tags_all as $key => $tag) {
                     $tags .= "#$tag ";
                 }
+                $ai_post = 0;
+                if ($wo['config']['ai_blog_system'] == 1 && !empty($_POST['ai_post']) && $_POST['ai_post'] == 'on') {
+                    $ai_post = 1;
+                }
                 $register = Wo_RegisterPost(array(
                     'user_id' => Wo_Secure($wo['user']['user_id']),
                     'blog_id' => Wo_Secure($last_id),
                     'postText' => Wo_Secure($_POST['blog_title']) . ' | ' . $tags,
                     'time' => time(),
                     'postPrivacy' => '0',
-                    'active' => $active
+                    'active' => $active,
+                    'ai_post' => $ai_post,
                 ));
                 if ($register) {
                     $data = array(
